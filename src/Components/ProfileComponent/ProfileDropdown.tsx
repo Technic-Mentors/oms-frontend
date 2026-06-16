@@ -16,11 +16,12 @@ const ProfileDropdown = ({
 }) => {
   const { currentUser } = useAppSelector((state) => state.officeState);
 
-  // Logic to determine the correct profile path
+  // Logic to determine the correct profile path - FIXED for employee role
   const getProfilePath = () => {
     const role = currentUser?.role?.toLowerCase();
+    
     if (role === "admin") return "/profile";
-    if (role === "user") return "/user/profile";
+    if (role === "user" || role === "employee") return "/user/profile"; // Added employee check
     // For any other end-user (System User)
     return "/system-user/profile";
   };
@@ -31,8 +32,8 @@ const ProfileDropdown = ({
     const normalized = role.toLowerCase();
 
     if (normalized === "admin") return "Admin";
-    if (normalized === "user") return "User";
-
+    if (normalized === "user" || normalized === "employee") return "Employee"; // Changed from "User" to "Employee"
+    
     return "System User";
   };
 
@@ -68,7 +69,7 @@ const ProfileDropdown = ({
       <div
         ref={dropdownRef}
         className="absolute right-0 mt-5 w-64 origin-top-right overflow-hidden rounded-xl border-1 
-        border-blue-400 hover:border-white bg-white shadow-2xl  focus:outline-none"
+        border-blue-400 hover:border-white bg-white shadow-2xl focus:outline-none"
       >
         {/* User Header Section */}
         <div className="bg-gray-50/50 px-4 py-4 border-b border-gray-100">

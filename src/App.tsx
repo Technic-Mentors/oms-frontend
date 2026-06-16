@@ -4,9 +4,12 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
+import { useEffect } from "react";
+import { globalTabManager } from "./utils/tabManager";
 import { Login } from "./Pages/Login";
 import { AdminDashboard } from "./Pages/AdminDashboard";
 import { UserDashboard } from "./Pages/UserDashboard";
+
 import { PrivateLayout } from "./Components/HOC/PrivateLayout/PrivateLayout";
 import { People } from "./Pages/AdminPage/People";
 import { AttendanceHub } from "./Pages/AdminPage/AttendanceHub";
@@ -51,6 +54,79 @@ import { UsersManagementHub } from "./Pages/AdminPage/UsersManagementHub";
 
 function App() {
   const { currentUser } = useAppSelector((state) => state?.officeState);
+  
+  // Global tab change listener to fix modal auto-open issue
+  useEffect(() => {
+    // Listen for global tab changes
+    const handleGlobalTabChange = () => {
+      globalTabManager.resetAllTriggers();
+    };
+
+    // Listen for route changes (URL changes)
+    const handleRouteChange = () => {
+      globalTabManager.resetAllTriggers();
+    };
+
+    // Listen for clicks on tab elements globally
+    const handleGlobalClick = (e: MouseEvent) => {  // ← ONLY CHANGE HERE
+      // Check if clicked element is a tab or inside a tab container
+      const target = e.target as HTMLElement;
+      const tabElement = target.closest('[role="tab"], .tab-button, button');
+      if (tabElement) {
+        // Check if it's likely a tab button
+        const el = tabElement as HTMLElement;
+        const isTab = tabElement.getAttribute('role') === 'tab' ||
+                     Boolean(tabElement.closest('[role="tablist"]')) ||
+                     (el.className || '').includes('tab') ||
+                     ['EMPLOYEES', 'CUSTOMERS', 'SUPPLIERS', 'LEAVE', 'ATTENDANCE'].some(
+                       text => (el.innerText || el.textContent || '').toUpperCase().includes(text)
+                     );
+        
+        if (isTab) {
+          // Small delay to ensure state updates first
+          setTimeout(() => {
+            globalTabManager.resetAllTriggers();
+          }, 10);
+        }
+      }
+    };
+
+    // Add event listeners
+    window.addEventListener('globalTabChange', handleGlobalTabChange);
+    window.addEventListener('popstate', handleRouteChange);
+    document.addEventListener('click', handleGlobalClick);
+    
+    // Cleanup - remove event listeners
+    return () => {
+      window.removeEventListener('globalTabChange', handleGlobalTabChange);
+      window.removeEventListener('popstate', handleRouteChange);
+      document.removeEventListener('click', handleGlobalClick);
+    };
+  }, []);
+// Add this useEffect RIGHT AFTER your existing useEffect or before it
+useEffect(() => {
+  // Check system preference for dark mode
+  const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  
+  if (isDarkMode) {
+    document.documentElement.classList.add('dark');
+  } else {
+    document.documentElement.classList.remove('dark');
+  }
+
+  // Optional: Listen for system theme changes
+  const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+  const handleChange = (e: MediaQueryListEvent) => {
+    if (e.matches) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  };
+  
+  mediaQuery.addEventListener('change', handleChange);
+  return () => mediaQuery.removeEventListener('change', handleChange);
+}, []);
   return (
     <Routers>
       <Routes>

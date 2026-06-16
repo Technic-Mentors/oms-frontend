@@ -70,7 +70,7 @@ export const ViewEmployeeAccount = ({ setModal, employee }: Props) => {
     fetchEmployeeAccounts();
   }, [fetchEmployeeAccounts]);
 
-  if (loading) return <Loader />;
+
 
   // Initialize running balance variable for calculation
   let runningNetBalance = 0;

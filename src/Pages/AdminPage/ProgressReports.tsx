@@ -204,6 +204,7 @@ export const ProgressReports = ({
         (item, index) => `
       <tr>
         <td style="width: 50px;">${index + 1}</td>
+        <td>${item.date ? new Date(item.date).toLocaleDateString() : 'N/A'}</td>
         <td>${item.employeeName}</td>
         <td>${item.projectName}</td>
         <td>${item.note}</td>
@@ -258,6 +259,7 @@ export const ProgressReports = ({
           <thead>
             <tr>
               <th style="width: 50px;">Sr#</th>
+              <th>Date</th>
               <th>Employee Name</th>
               <th>Project Title</th>
               <th>Progress Note</th>
@@ -289,10 +291,10 @@ export const ProgressReports = ({
 
       const columns = [
         { label: "Sr#", key: "__index" },
+        { label: "Date", key: "date" },
         { label: "Employee", key: "employeeName" },
         { label: "Project", key: "projectName" },
         { label: "Note", key: "note" },
-        { label: "Date", key: "date" },
       ];
 
       // ✅ Ensure employee is selected (for admin)
@@ -407,9 +409,9 @@ export const ProgressReports = ({
       <div className="overflow-auto px-3 sm:px-0 flex-grow">
         <div className="min-w-[1000px]">
           <div className="px-0.5 pt-0.5">
-            {/* Aligned with UsersDetails grid logic */}
-            <div className="grid grid-cols-[60px_1fr_1fr_3fr] bg-blue-400 text-white rounded-lg items-center font-bold text-xs tracking-wider sticky top-0 z-10 gap-3 px-3 py-3 shadow-sm">
+            <div className="grid grid-cols-[60px_1.2fr_1.5fr_1.5fr_2.5fr] bg-blue-400 text-white rounded-lg items-center font-bold text-xs tracking-wider sticky top-0 z-10 gap-3 px-3 py-3 shadow-sm">
               <span className="text-left">Sr#</span>
+              <span className="text-left">Date</span>
               <span className="text-left">Employee</span>
               <span className="text-left">Project</span>
               <span className="text-left">Progress Note</span>
@@ -432,22 +434,20 @@ export const ProgressReports = ({
                 {paginatedData.map((item, index) => (
                   <div
                     key={item.id}
-                    className="grid grid-cols-[60px_1fr_1fr_3fr] items-center px-3 py-2 gap-3 text-sm bg-white border 
-                    border-gray-100 rounded-lg hover:bg-blue-50/30 transition-colors shadow-sm"
+                    className="grid grid-cols-[60px_1.2fr_1.5fr_1.5fr_2.5fr] items-center px-3 py-2 gap-3 text-sm bg-white border border-gray-100 rounded-lg hover:bg-blue-50/30 transition-colors shadow-sm"
                   >
                     <span className="text-gray-500 font-medium">
                       {startIndex + index + 1}
                     </span>
-
-                    {/* Icons removed to match UsersDetails clean text style */}
+                    <div className="text-gray-600 whitespace-pre-wrap leading-relaxed">
+                      {item.date ? new Date(item.date).toLocaleDateString() : 'N/A'}
+                    </div>
                     <div className="truncate text-gray-800">
                       {item.employeeName}
                     </div>
-
                     <div className="text-gray-700 font-medium truncate">
                       {item.projectName}
                     </div>
-
                     <div className="text-gray-600 whitespace-pre-wrap leading-relaxed">
                       {item.note}
                     </div>
@@ -466,12 +466,12 @@ export const ProgressReports = ({
           end={Math.min(startIndex + externalPageSize, totalItems)}
           total={totalItems}
         />
-         <Pagination
-                 pageNo={pageNo}
-                 totalNum={filteredProgress.length}
-                 pageSize={externalPageSize}
-                 handlePageClick={(targetPage) => setPageNo(targetPage)}
-               />
+        <Pagination
+          pageNo={pageNo}
+          totalNum={filteredProgress.length}
+          pageSize={externalPageSize}
+          handlePageClick={(targetPage) => setPageNo(targetPage)}
+        />
       </div>
     </div>
   );

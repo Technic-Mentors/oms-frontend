@@ -41,7 +41,7 @@ type CategoryT = { id: number; categoryName: string };
 
 type ExpenseT = {
   id: number;
-  expenseName: string;
+  expenseName: string ;
   categoryName: string;
   date: string;
   amount: number | string;

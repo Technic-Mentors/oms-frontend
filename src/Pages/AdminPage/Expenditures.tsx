@@ -41,7 +41,10 @@ export const Expenditures = () => {
       count: prev.tab === tab ? prev.count + 1 : 1,
     }));
   };
-
+const handleTabChange = (tab: TabType) => {
+  setActiveTab(tab);
+  setTriggerModal({ tab, count: 0 });
+};
   useEffect(() => {
     if (tabFromURL === "EXPENSE" || tabFromURL === "CATEGORY") {
       setActiveTab(tabFromURL);
@@ -79,7 +82,7 @@ export const Expenditures = () => {
             {(["EXPENSE", "CATEGORY"] as TabType[]).map((tab) => (
               <button
                 key={tab}
-                onClick={() => setActiveTab(tab)}
+                onClick={() => handleTabChange(tab)}
                 className={`flex-1 sm:flex-none px-2 sm:px-6 py-1 text-sm font-bold transition-all duration-200 rounded-lg ${
                   activeTab === tab
                     ? "bg-white text-[#334155] shadow-sm"

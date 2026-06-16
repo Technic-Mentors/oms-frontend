@@ -49,7 +49,7 @@ const yearOptions = Array.from({ length: 6 }, (_, i) => ({
 const initialState = {
   startTime: "",
   endTime: "",
-  offDay: "",
+
   lateTime: "",
   halfLeave: "",
   month: "",
@@ -63,60 +63,78 @@ export const AddAttendanceRule = ({
   const { currentUser } = useAppSelector((state) => state.officeState);
   const [addConfig, setAddConfig] = useState(initialState);
     const [loading, setLoading] = useState(false);
-
+const [selectedOffDays, setSelectedOffDays] = useState<string[]>([]);
   const token = currentUser?.token;
 
-  const handlerChange = (
-    e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>,
-  ) => {
-    const { name, value } = e.target;
-    setAddConfig({ ...addConfig, [name]: value });
-  };
+const handlerChange = (
+  e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>,
+) => {
+  const { name, value } = e.target;
+  
+  // Handle multi-select for off days separately
+  if (name === "offDay") {
+    const selectedValues = Array.from(
+      (e.target as HTMLSelectElement).selectedOptions,
+      (option) => option.value
+    );
+    setSelectedOffDays(selectedValues);
+    return;
+  }
+  
+  setAddConfig({ ...addConfig, [name]: value });
+};
 
-  const handlerSubmitted = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+ const handlerSubmitted = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
 
-    const { startTime, endTime, lateTime, halfLeave } = addConfig;
+  const { startTime, endTime, lateTime, halfLeave, month, year } = addConfig;
 
-     if (lateTime < startTime || lateTime > endTime && halfLeave < startTime || halfLeave > endTime) {
-      toast.error("Late and Half Leave Time must be between Start Time and End Time");
-      return;
-    }
+  // Validate off days selection
+  if (selectedOffDays.length === 0) {
+    toast.error("Please select at least one off day");
+    return;
+  }
 
-    if (lateTime < startTime || lateTime > endTime) {
-      toast.error("Late Time must be between Start Time and End Time");
-      return;
-    }
+  // Your existing validations...
+  if (lateTime < startTime || lateTime > endTime) {
+    toast.error("Late Time must be between Start Time and End Time");
+    return;
+  }
 
-    if (halfLeave < startTime || halfLeave > endTime) {
-      toast.error("Half Leave Time must be between Start Time and End Time");
-      return;
-    }
+  if (halfLeave < startTime || halfLeave > endTime) {
+    toast.error("Half Leave Time must be between Start Time and End Time");
+    return;
+  }
 
-   
+  if (startTime >= endTime) {
+    toast.error("Start Time must be before End Time");
+    return;
+  }
 
-    if (startTime >= endTime) {
-      toast.error("Start Time must be before End Time");
-      return;
-    }
+  setLoading(true);
 
-        setLoading(true);
+  try {
+    // Prepare payload with multiple off days as comma-separated string or array
+    const payload = {
+      ...addConfig,
+      offDay: selectedOffDays.join(","), // Send as comma-separated string
+      // OR send as array if backend accepts: offDays: selectedOffDays
+    };
 
-
-    try {
-      await axios.post(`${BASE_URL}/api/admin/configureTime`, addConfig, {
-        headers: { Authorization: token },
-      });
-      handleGetAllTimeConfig();
-      setModal();
-      toast.success("Configuration saved successfully");
-    } catch (error) {
-      console.error(error);
-      toast.error("Something going wrong");
-    } finally {
-      setLoading(false);
-    }
-  };
+    await axios.post(`${BASE_URL}/api/admin/configureTime`, payload, {
+      headers: { Authorization: token },
+    });
+    
+    handleGetAllTimeConfig();
+    setModal();
+    toast.success("Configuration saved successfully");
+  } catch (error) {
+    console.error(error);
+    toast.error("Something went wrong");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div>
@@ -153,14 +171,31 @@ export const AddAttendanceRule = ({
                 handlerChange={handlerChange}
               />
 
-              <OptionField
-                labelName="Off Day *"
-                name="offDay"
-                value={addConfig.offDay}
-                handlerChange={handlerChange}
-                optionData={dayOptions}
-                inital="Select Off Day"
-              />
+<div className="md:col-span-2">
+  <label className="block text-gray-600 text-xs font-semibold mb-2">
+    Off Days * (Select multiple)
+  </label>
+  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+    {dayOptions.map((day) => (
+      <label key={day.id} className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          value={day.value}
+          checked={selectedOffDays.includes(day.value)}
+          onChange={(e) => {
+            if (e.target.checked) {
+              setSelectedOffDays([...selectedOffDays, day.value]);
+            } else {
+              setSelectedOffDays(selectedOffDays.filter((d) => d !== day.value));
+            }
+          }}
+          className="w-4 h-4 text-blue-600"
+        />
+        <span className="text-sm text-gray-700">{day.label}</span>
+      </label>
+    ))}
+  </div>
+</div>
 
               <InputField
                 labelName="Late Time *"

@@ -20,13 +20,9 @@ export const AttendanceHub = () => {
 
   useEffect(() => {
     const tabParam = searchParams.get("tab");
-    if (tabParam === "LEAVE") {
-      setActiveTab("LEAVE");
-    } else if (tabParam === "EMPLOYEE") {
-      setActiveTab("EMPLOYEE");
-    } else if (tabParam === "MARK") {
-      setActiveTab("MARK");
-    }
+if (tabParam === "LEAVE") handleTabChange("LEAVE");
+else if (tabParam === "EMPLOYEE") handleTabChange("EMPLOYEE");
+else if (tabParam === "MARK") handleTabChange("MARK");
   }, [searchParams]);
 
   // States for search and pagination to match People.tsx header
@@ -38,12 +34,19 @@ export const AttendanceHub = () => {
     count: number;
   }>({ tab: "MARK", count: 0 });
 
-  const handleActionClick = (tab: TabType) => {
-    setTriggerModal((prev) => ({
-      tab,
-      count: prev.tab === tab ? prev.count + 1 : 1,
-    }));
-  };
+// With:
+const handleActionClick = (tab: TabType) => {
+  setTriggerModal((prev) => ({
+    tab,
+    count: prev.count + 1,
+  }));
+};
+
+// And reset trigger on tab change:
+const handleTabChange = (tab: TabType) => {
+  setActiveTab(tab);
+  setTriggerModal({ tab, count: 0 }); // reset on tab switch
+};
 
   return (
     <div className="flex flex-col flex-grow shadow-lg p-1 sm:p-2 rounded-lg bg-gray-100 overflow-hidden">
@@ -86,7 +89,7 @@ export const AttendanceHub = () => {
               return (
                 <button
                   key={tab}
-                  onClick={() => setActiveTab(tab)}
+                 onClick={() => handleTabChange(tab)}
                   className={`flex-1 sm:flex-none px-2 sm:px-6 py-1 text-sm font-bold transition-all duration-200 rounded-lg ${
                     activeTab === tab
                       ? "bg-white text-[#334155] shadow-sm"

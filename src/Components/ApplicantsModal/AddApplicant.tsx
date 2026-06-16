@@ -15,7 +15,14 @@ import { BASE_URL } from "../../Content/URL";
 import { useAppSelector } from "../../redux/Hooks";
 
 import { toast } from "react-toastify";
-
+const isValidEmail = (email: string): boolean => {
+  if (email.length > 45) return false;
+  if (email.length < 5) return false;
+  
+  const emailRegex =
+    /^(?!\.)(?!.*\.\.)[a-zA-Z0-9._+-]+(?<!\.)@(?!(?:-|\.)).*?(?<!-)\.[a-zA-Z]{2,}$/;
+  return emailRegex.test(email);
+};
 type AddApplicantProps = {
   setModal: () => void;
   refreshApplicants: () => void;
@@ -76,7 +83,7 @@ export const AddApplicant = ({
     }
 
     if (name === "email") {
-      updatedValue = value.replace(/\s/g, "").toLowerCase().slice(0, 80);
+      updatedValue = value.replace(/\s/g, "").toLowerCase().slice(0, 45);
     }
 
     if (type === "number") {
@@ -121,33 +128,18 @@ export const AddApplicant = ({
         toastId: "add-applicant-validation",
       });
     }
+// Email validation with 45 character limit
+if (email.length > 45) {
+  return toast.error("Email must not exceed 45 characters", {
+    toastId: "email-max-length",
+  });
+}
 
-    if (addApplicant.email) {
-      let emailValue = addApplicant.email.replace(/^\s+/, "");
-      emailValue = emailValue.replace(/[^a-zA-Z0-9@._+-]/g, "");
-
-      const [local, domain] = emailValue.split("@");
-
-      if (
-        local?.includes("..") ||
-        local?.startsWith(".") ||
-        (local?.endsWith(".") && !domain)
-      ) {
-        return toast.error("Invalid email format");
-      }
-
-      if (
-        domain?.startsWith(".") ||
-        local?.startsWith("-") ||
-        local?.endsWith("-")
-      ) {
-        return toast.error("Invalid email format");
-      }
-
-      if (domain?.startsWith("-") || domain?.endsWith("-")) {
-        return toast.error("Invalid email format");
-      }
-    }
+if (!isValidEmail(email)) {
+  return toast.error("Please enter a valid email address", {
+    toastId: "invalid-email",
+  });
+}
 
     if (applicant_contact.length !== 11) {
       return toast.error("Contact number must be exactly 11 digits", {
@@ -281,6 +273,7 @@ export const AddApplicant = ({
                 name="email"
                 value={addApplicant.email}
                 handlerChange={handlerChange}
+                 maxLength={45}  // ADD THIS LINE
               />
 
               <InputField

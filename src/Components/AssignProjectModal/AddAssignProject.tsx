@@ -1,90 +1,88 @@
 import React, { FormEvent, useEffect, useState, useCallback } from "react";
-
 import axios from "axios";
-
 import { toast } from "react-toastify";
-
 import { AddButton } from "../CustomButtons/AddButton";
-
 import { CancelBtn } from "../CustomButtons/CancelBtn";
-
 import { Title } from "../Title";
-
 import { UserSelect } from "../InputFields/UserSelect";
-
 import { OptionField } from "../InputFields/OptionField";
-
 import { InputField } from "../InputFields/InputField";
-
 import { BASE_URL } from "../../Content/URL";
-
 import { useAppSelector } from "../../redux/Hooks";
 
 type UserOption = {
   id: number;
-
   name: string;
-
   loginStatus: string;
-
   projectName: string;
-
   role: string;
 };
 
 type ProjectT = {
   id: number;
-
   projectName: string;
-
   projectCategory: string;
-
   description: string;
-
   startDate: string;
-
-  endDate: string;
+  endDate: string | null;
 };
 
 const currentDate = new Date().toLocaleDateString("en-CA");
 
 type AddAttendanceProps = {
   setModal: () => void;
-
   handleGetAllAssignProjects: () => void;
 };
 
 const initialState = {
   userId: "",
-
   projectId: "",
-
   date: currentDate,
 };
 
 export const AddAssignProject = ({
   setModal,
-
   handleGetAllAssignProjects,
 }: AddAttendanceProps) => {
   const { currentUser } = useAppSelector((state) => state.officeState);
-
   const token = currentUser?.token;
-
   const [addProject, setAddProject] = useState(initialState);
-
   const [allUsers, setAllUsers] = useState([]);
-
   const [loading, setLoading] = useState(false);
-
   const [allProjects, setAllProjects] = useState<ProjectT[] | null>(null);
+  const [selectedProject, setSelectedProject] = useState<ProjectT | null>(null);
 
   const handlerChange = (
     e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>,
   ) => {
     const { name, value } = e.target;
-
-    setAddProject({ ...addProject, [name]: value });
+    
+    // When project is selected, find the project details
+    if (name === "projectId") {
+      const project = allProjects?.find(p => p.id === parseInt(value));
+      setSelectedProject(project || null);
+      
+      // Validate current date against project date range
+      if (project) {
+        const minDate = project.startDate;
+        const maxDate = project.endDate || project.startDate;
+        const currentDateValue = addProject.date;
+        
+        if (currentDateValue < minDate || currentDateValue > maxDate) {
+          setAddProject({ 
+            ...addProject, 
+            [name]: value,
+            date: minDate // Reset to min valid date
+          });
+        } else {
+          setAddProject({ ...addProject, [name]: value });
+        }
+      } else {
+        setAddProject({ ...addProject, [name]: value });
+      }
+    } else {
+      setAddProject({ ...addProject, [name]: value });
+    }
   };
 
   const getAllUsers = useCallback(async () => {
@@ -94,15 +92,12 @@ export const AddAssignProject = ({
       });
 
       const filteredUsers = res?.data?.users
-
         .filter(
           (user: UserOption) =>
             user.role === "user" && user.loginStatus === "Y",
         )
-
         .map((user: UserOption) => ({
           value: user.id,
-
           label: user.name,
         }));
 
@@ -133,14 +128,24 @@ export const AddAssignProject = ({
       });
     }
 
+    // Validate date against project's date range
+    if (selectedProject) {
+      const startDate = selectedProject.startDate;
+      const endDate = selectedProject.endDate || selectedProject.startDate;
+      
+      if (addProject.date < startDate || addProject.date > endDate) {
+        return toast.error(`Date must be between ${startDate} and ${endDate}`, {
+          toastId: "date-range-error",
+        });
+      }
+    }
+
     setLoading(true);
 
     try {
       const payload = {
         employee_id: addProject.userId,
-
         projectId: addProject.projectId,
-
         date: addProject.date,
       };
 
@@ -149,17 +154,14 @@ export const AddAssignProject = ({
       });
 
       handleGetAllAssignProjects();
-
       toast.success("Project assigned successfully!", {
         toastId: "assign-success",
       });
-
       setModal();
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         const message =
           error.response?.data?.message || "Failed to assign project!";
-
         toast.error(message, { toastId: "assign-error" });
       } else {
         toast.error("Something went wrong!", { toastId: "assign-error" });
@@ -171,9 +173,23 @@ export const AddAssignProject = ({
 
   useEffect(() => {
     getAllUsers();
-
     getAllProjects();
   }, [getAllProjects, getAllUsers]);
+
+  // Get min and max dates based on selected project
+  const getMinDate = () => {
+    if (selectedProject) {
+      return selectedProject.startDate;
+    }
+    return "1900-01-01";
+  };
+
+  const getMaxDate = () => {
+    if (selectedProject) {
+      return selectedProject.endDate || selectedProject.startDate;
+    }
+    return "2099-12-31";
+  };
 
   return (
     <div className="fixed inset-0 bg-opacity-50 backdrop-blur-xs px-4 flex items-center justify-center z-50">
@@ -209,30 +225,39 @@ export const AddAssignProject = ({
               value={addProject.projectId}
               optionData={allProjects?.map((project) => ({
                 id: project.id,
-
                 label: project.projectName,
-
                 value: project.id,
               }))}
               inital="Please Select Project"
             />
 
             <div className="flex flex-col md:col-span-2">
-              <label className="text-sm font-medium text-black ">Date *</label>
-
+              <label className="text-sm font-medium text-black">Date *</label>
+              {selectedProject && (
+                <p className="text-xs text-gray-500 mb-1">
+                  Project date range: {selectedProject.startDate} - {selectedProject.endDate || selectedProject.startDate}
+                </p>
+              )}
               <InputField
                 type="date"
                 name="date"
                 value={addProject.date}
                 handlerChange={handlerChange}
+                min={getMinDate()}
+                max={getMaxDate()}
                 className="border border-indigo-900 rounded p-2"
+                disabled={!selectedProject}
               />
+              {!selectedProject && (
+                <p className="text-xs text-amber-600 mt-1">
+                  Please select a project first
+                </p>
+              )}
             </div>
           </div>
 
           <div className="flex justify-end gap-3 px-4 rounded py-6 bg-white">
             <CancelBtn setModal={setModal} />
-
             <AddButton loading={loading} label={loading ? "Saving" : "Save"} />
           </div>
         </form>

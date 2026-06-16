@@ -62,12 +62,13 @@ export const EmployeeAccount = ({
 
   const [pageNo, setPageNo] = useState(1);
 
-  const handleToggleModal = (active: "ADDACCOUNT" | "VIEW" | "") => {
-    setIsOpenModal((prev) => (prev === active ? "" : active));
-  };
+// Replace existing handleToggleModal:
+const handleToggleModal = useCallback((active: "ADDACCOUNT" | "VIEW" | "") => {
+  setIsOpenModal(active);
+}, []);
 
   const fetchEmployees = useCallback(async () => {
-    if (!currentUser) return;
+  if (!currentUser || employees.length > 0) return;
 
     try {
       if (currentUser.role === "admin") {
@@ -101,23 +102,22 @@ export const EmployeeAccount = ({
     }
   }, [token, currentUser]);
 
-  useEffect(() => {
-    document.title = "(OMS) EMPLOYEE ACCOUNT";
-    dispatch(navigationStart());
-    setTimeout(() => {
-      dispatch(navigationSuccess("EMPLOYEE ACCOUNT"));
-    }, 500);
-  }, [dispatch]);
+useEffect(() => {
+  document.title = "(OMS) EMPLOYEE ACCOUNT";
+  dispatch(navigationSuccess("EMPLOYEE ACCOUNT"));
+}, [dispatch]);
 
   useEffect(() => {
     fetchEmployees();
   }, [fetchEmployees]);
 
-  useEffect(() => {
-    if (triggerModal > 0) {
-      setIsOpenModal("ADDACCOUNT");
-    }
-  }, [triggerModal]);
+// Replace lines 94-96 with this:
+useEffect(() => {
+  if (triggerModal > 0) {
+    setIsOpenModal("ADDACCOUNT");
+  }
+}, [triggerModal]);
+
 
   // Reset page on search/limit change
   useEffect(() => {
@@ -193,12 +193,13 @@ export const EmployeeAccount = ({
 
                     {/* Action Buttons aligned with UsersDetails width */}
                     <div className="flex items-center justify-end gap-1 w-[140px] pr-5">
-                      <ViewButton
-                        handleView={() => {
-                          setSelectedEmployee(emp);
-                          handleToggleModal("VIEW");
-                        }}
-                      />
+                
+<ViewButton
+  handleView={() => {
+    setSelectedEmployee(emp);
+    setIsOpenModal("VIEW");
+  }}
+/>
                       {/* Note: Added placeholder spacing to maintain alignment if 
                         EmployeeAccount only uses ViewButton while UsersDetails has three. */}
                     </div>

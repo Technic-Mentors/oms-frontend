@@ -183,7 +183,7 @@ export const Todo = ({
             <div className="grid grid-cols-[60px_1fr_1fr_1fr_1fr_1fr_1fr_1fr_auto] bg-blue-400 text-white rounded-lg items-center font-bold text-xs tracking-wider sticky top-0 z-10 gap-3 px-3 py-3 shadow-sm">
               <span className="text-left">Sr#</span>
               <span className="text-left">
-                {currentUser?.role === "admin" ? "Employee" : "Task ID"}
+                
               </span>
               <span className="text-left">Email</span>
               <span className="text-left">Task Detail</span>
@@ -217,11 +217,7 @@ export const Todo = ({
 
                     {/* User Info (Admin) or ID */}
                     <div className="flex items-center gap-3 overflow-hidden">
-                      <span className="truncate  text-gray-800 text-sm">
-                        {currentUser?.role === "admin"
-                          ? todo.employeeName || "Unassigned"
-                          : `#${todo.id}`}
-                      </span>
+                   
                     </div>
 
                     <div className="text-gray-600 truncate">
@@ -267,21 +263,28 @@ export const Todo = ({
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center justify-end gap-1 w-[140px]">
-                      <ViewButton handleView={() => setViewTodo(todo)} />
-                      <EditButton
-                        handleUpdate={() => {
-                          setSelectedTodo(todo);
-                          setModalType("Edit");
-                        }}
-                      />
-                      <DeleteButton
-                        handleDelete={() => {
-                          setCatchId(todo.id);
-                          setModalType("Delete");
-                        }}
-                      />
-                    </div>
+               {/* Actions */}
+<div className="flex items-center justify-end gap-1 w-[140px]">
+  <ViewButton handleView={() => setViewTodo(todo)} />
+  
+  {/* Only show Edit and Delete buttons for admin role */}
+  {currentUser?.role === "admin" && (
+    <>
+      <EditButton
+        handleUpdate={() => {
+          setSelectedTodo(todo);
+          setModalType("Edit");
+        }}
+      />
+      <DeleteButton
+        handleDelete={() => {
+          setCatchId(todo.id);
+          setModalType("Delete");
+        }}
+      />
+    </>
+  )}
+</div>
                   </div>
                 ))}
               </div>

@@ -12,9 +12,11 @@ type InputFieldProps = {
   readOnly?: boolean;
   className?: string;
   min?: string;
+    max?: string;
   icon?: ReactNode;
   minLength?: number;
   maxLength?: number;
+  
   autoComplete?: string; // Add this line
 };
 
@@ -32,6 +34,8 @@ export const InputField = ({
   icon,
   minLength,
   maxLength,
+   min,    // ADD THIS LINE
+  max,
   autoComplete, // Add this line
 }: InputFieldProps) => {
   return (
@@ -62,6 +66,8 @@ export const InputField = ({
           readOnly={readOnly}
           minLength={minLength}
           maxLength={maxLength}
+          min={min}    // ADD THIS LINE
+  max={max}    // ADD THIS LINE
         />
       </div>
     </div>

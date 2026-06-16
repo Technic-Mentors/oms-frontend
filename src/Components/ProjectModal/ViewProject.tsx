@@ -84,43 +84,46 @@ export const ViewProject = ({
               </div>
             </div>
           </div>
-
-          {/* Section 2: Timeline */}
-          <div className="border border-gray-200 rounded-md p-4 relative">
-            <h3 className="absolute -top-3 left-3 bg-white px-2 text-[10px] font-bold text-blue-400 uppercase tracking-wider">
-              Project Timeline
-            </h3>
-            <div className="grid grid-cols-2 gap-y-4 pt-2">
-              <div>
-                <label className="flex items-center gap-2 text-[10px] font-bold text-gray-500 uppercase">
-                  <FaCalendarAlt className="text-gray-400" /> Start Date
-                </label>
-                <p className="text-gray-800 font-medium">
-                  {new Date(viewProject.startDate)
-                    .toLocaleDateString("en-GB", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric",
-                    })
-                    .replace(/ /g, "-")}
-                </p>
-              </div>
-              <div>
-                <label className="flex items-center gap-2 text-[10px] font-bold text-gray-500 uppercase">
-                  <FaCalendarCheck className="text-gray-400" /> End Date
-                </label>
-                <p className="text-gray-800 font-medium">
-                  {new Date(viewProject.endDate)
-                    .toLocaleDateString("en-GB", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric",
-                    })
-                    .replace(/ /g, "-")}
-                </p>
-              </div>
-            </div>
-          </div>
+{/* Section 2: Timeline */}
+<div className="border border-gray-200 rounded-md p-4 relative">
+  <h3 className="absolute -top-3 left-3 bg-white px-2 text-[10px] font-bold text-blue-400 uppercase tracking-wider">
+    Project Timeline
+  </h3>
+  <div className="grid grid-cols-2 gap-y-4 pt-2">
+    <div>
+      <label className="flex items-center gap-2 text-[10px] font-bold text-gray-500 uppercase">
+        <FaCalendarAlt className="text-gray-400" /> Start Date
+      </label>
+      <p className="text-gray-800 font-medium">
+        {new Date(viewProject.startDate)
+          .toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          })
+          .replace(/ /g, "-")}
+      </p>
+    </div>
+    
+    {/* Only show End Date if it exists */}
+    {viewProject.endDate && (
+      <div>
+        <label className="flex items-center gap-2 text-[10px] font-bold text-gray-500 uppercase">
+          <FaCalendarCheck className="text-gray-400" /> End Date
+        </label>
+        <p className="text-gray-800 font-medium">
+          {new Date(viewProject.endDate)
+            .toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })
+            .replace(/ /g, "-")}
+        </p>
+      </div>
+    )}
+  </div>
+</div>
 
           {/* Section 3: Description */}
           <div className="border border-gray-200 rounded-md p-4 relative">

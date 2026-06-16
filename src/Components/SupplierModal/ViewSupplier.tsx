@@ -4,7 +4,7 @@ import {
   FaMapMarkerAlt,
   FaEnvelope,
   FaPhone,
-  FaIdBadge,
+
 } from "react-icons/fa";
 
 export interface SupplierViewT {
@@ -48,14 +48,7 @@ export const ViewSupplierModal = ({ setModal, supplier }: ModalTProps) => {
                   {supplier.supplierName}
                 </p>
               </div>
-              <div>
-                <label className="flex items-center gap-2 text-[10px] font-bold text-gray-500 uppercase">
-                  <FaIdBadge className="text-gray-400" /> Supplier ID
-                </label>
-                <p className="text-gray-800 font-medium">
-                  #{supplier.supplierId}
-                </p>
-              </div>
+         
             </div>
           </div>
 

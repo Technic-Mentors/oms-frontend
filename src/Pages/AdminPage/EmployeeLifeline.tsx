@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import axios from "axios";
 import { BASE_URL } from "../../Content/URL";
 import toast, { Toaster } from "react-hot-toast";
@@ -77,9 +77,14 @@ export const EmployeeLifeline = ({
     fetchLifelines();
   }, [fetchLifelines]);
 
-  useEffect(() => {
-    if (triggerAdd > 0) setIsOpenModal("ADD");
-  }, [triggerAdd]);
+// Add:
+const prevTriggerRef = useRef(0);
+useEffect(() => {
+  if (triggerAdd > 0 && triggerAdd !== prevTriggerRef.current) {
+    setIsOpenModal("ADD");
+  }
+  prevTriggerRef.current = triggerAdd;
+}, [triggerAdd]);
 
   useEffect(() => {
     setPageNo(1);
@@ -133,7 +138,7 @@ export const EmployeeLifeline = ({
           {/* Body Section */}
           <div className="px-0.5 py-2">
             {paginatedLifeLines.length === 0 ? (
-              <div className="bg-gray-50 rounded-lg border-2 border p-12 flex flex-col items-center justify-center text-gray-400">
+              <div className="bg-gray-50 rounded-lg border-2  p-12 flex flex-col items-center justify-center text-gray-400">
                 <RiInboxArchiveLine size={48} className="mb-3 text-gray-300" />
                 <p className="text-lg font-medium">No records available!</p>
               </div>

@@ -64,7 +64,33 @@ export const AddTodo = ({ setModal, getAllTodos }: AddTodoProps) => {
       }));
     }
   }, [currentUser, isAdmin]);
-
+// Add this after your existing useEffect hooks
+useEffect(() => {
+  // Real-time validation warnings
+  if (addTodo.startDate && addTodo.endDate) {
+    const start = new Date(addTodo.startDate);
+    const end = new Date(addTodo.endDate);
+    
+    if (end < start) {
+      toast.warning("End date is before start date!", {
+        toastId: "date-warning",
+        autoClose: 3000,
+      });
+    }
+  }
+  
+  if (addTodo.startDate && addTodo.deadline) {
+    const start = new Date(addTodo.startDate);
+    const deadline = new Date(addTodo.deadline);
+    
+    if (start > deadline) {
+      toast.warning("Start date is after deadline!", {
+        toastId: "deadline-warning",
+        autoClose: 3000,
+      });
+    }
+  }
+}, [addTodo.startDate, addTodo.endDate, addTodo.deadline]);
   const getAllUsers = useCallback(async () => {
     if (!token || !isAdmin) return;
     try {
@@ -101,84 +127,82 @@ export const AddTodo = ({ setModal, getAllTodos }: AddTodoProps) => {
     setAddTodo((prev) => ({ ...prev, [name]: updatedValue }));
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
 
-    if (
-      !addTodo.task ||
-      !addTodo.startDate ||
-      !addTodo.endDate ||
-      !addTodo.deadline
-    ) {
-      toast.error("Please fill all required fields", {
-        toastId: "required-fields",
-      });
-      return;
-    }
+  if (
+    !addTodo.task ||
+    !addTodo.startDate ||
+    !addTodo.endDate ||
+    !addTodo.deadline
+  ) {
+    toast.error("Please fill all required fields", {
+      toastId: "required-fields",
+    });
+    return;
+  }
 
-    if (
-      new Date(addTodo.startDate) > new Date(addTodo.deadline) &&
-      new Date(addTodo.endDate) > new Date(addTodo.deadline)
-    ) {
-      toast.error("Start Date and End Date cannot be later than Deadline", {
-        toastId: "date-validation",
-      });
-      return;
-    }
+  // Convert dates to Date objects for comparison
+  const startDateObj = new Date(addTodo.startDate);
+  const endDateObj = new Date(addTodo.endDate);
+  const deadlineObj = new Date(addTodo.deadline);
 
-    if (new Date(addTodo.startDate) > new Date(addTodo.endDate)) {
-      toast.error("Start Date cannot be later than End Date", {
-        toastId: "date-validation",
-      });
-      return;
-    }
+  // 1. Check if end date is before start date
+  if (endDateObj < startDateObj) {
+    toast.error("End Date cannot be earlier than Start Date", {
+      toastId: "end-before-start",
+    });
+    return;
+  }
 
-    if (new Date(addTodo.startDate) > new Date(addTodo.deadline)) {
-      toast.error("Start Date cannot be later than Deadline", {
-        toastId: "date-validation",
-      });
-      return;
-    }
+  // 2. Check if start date is after deadline
+  if (startDateObj > deadlineObj) {
+    toast.error("Start Date cannot be later than Deadline", {
+      toastId: "start-after-deadline",
+    });
+    return;
+  }
 
-    if (new Date(addTodo.endDate) > new Date(addTodo.deadline)) {
-      toast.error("End Date cannot be later than Deadline", {
-        toastId: "date-validation",
-      });
-      return;
-    }
+  // 3. Check if end date is after deadline
+  if (endDateObj > deadlineObj) {
+    toast.error("End Date cannot be later than Deadline", {
+      toastId: "end-after-deadline",
+    });
+    return;
+  }
 
-    setLoading(true);
+  setLoading(true);
 
-    try {
-      await axios.post(`${BASE_URL}/api/admin/createTodo`, addTodo, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+  try {
+    await axios.post(`${BASE_URL}/api/admin/createTodo`, addTodo, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-      toast.success("Todo added successfully", { toastId: "success" });
-      getAllTodos();
-      setModal();
-      setAddTodo(initialState);
-    } catch (err: unknown) {
-      console.error(err);
+    toast.success("Todo added successfully", { toastId: "success" });
+    getAllTodos();
+    setModal();
+    setAddTodo(initialState);
+  } catch (err: unknown) {
+    console.error(err);
 
-      if (axios.isAxiosError(err)) {
-        if (
-          err.response?.status === 400 &&
-          err.response?.data?.message.includes("already exists")
-        ) {
-          toast.error(err.response.data.message, { toastId: "duplicate-task" });
-        } else {
-          toast.error("Failed to add todo", { toastId: "failed" });
-        }
+    if (axios.isAxiosError(err)) {
+      if (
+        err.response?.status === 400 &&
+        err.response?.data?.message.includes("already exists")
+      ) {
+        toast.error(err.response.data.message, { toastId: "duplicate-task" });
       } else {
-        toast.error("An unexpected error occurred", {
-          toastId: "unexpected-error",
-        });
+        toast.error("Failed to add todo", { toastId: "failed" });
       }
-    } finally {
-      setLoading(false);
+    } else {
+      toast.error("An unexpected error occurred", {
+        toastId: "unexpected-error",
+      });
     }
-  };
+  } finally {
+    setLoading(false);
+  }
+};
 
   const userOptions: UserOption[] = allUsers
     .filter((u) => u.role === "user" && u.loginStatus === "Y")

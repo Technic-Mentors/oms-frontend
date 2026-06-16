@@ -1,5 +1,6 @@
 import axios from "axios";
 import { BASE_URL } from "../../Content/URL";
+import { toast } from "react-toastify";
 import { useAppDispatch, useAppSelector } from "../../redux/Hooks";
 import {
   navigationStart,
@@ -74,36 +75,38 @@ export const Calendar = ({
     setIsOpenModal((prev) => (prev === active ? "" : active));
   };
 
-  const handleGetAllCalendar = useCallback(
-    async (externalData?: CalendarSession[]): Promise<void> => {
-      try {
-        let mappedData: CalendarSession[];
-        if (externalData) {
-          mappedData = externalData;
-        } else {
-          const res = await axios.get(
-            `${BASE_URL}/api/admin/getCalendarSession`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            },
-          );
-          mappedData = (res.data.data || res.data).map(
-            (item: CalendarSession) => ({
-              id: item.id,
-              session_name: item.session_name,
-              year: item.year,
-              month: item.month,
-              calendarStatus: item.calendarStatus,
-            }),
-          );
-        }
-        setCalendarList(mappedData);
-      } catch (error) {
-        console.error("Error fetching calendar sessions:", error);
+const handleGetAllCalendar = useCallback(
+  async (externalData?: CalendarSession[]): Promise<void> => {
+    try {
+      let mappedData: CalendarSession[];
+      if (externalData) {
+        mappedData = externalData;
+      } else {
+        const res = await axios.get(
+          `${BASE_URL}/api/admin/getCalendarSession`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
+        mappedData = (res.data.data || res.data).map(
+          (item: CalendarSession) => ({
+            id: item.id,
+            session_name: item.session_name,
+            year: item.year,
+            month: item.month,
+            calendarStatus: item.calendarStatus,
+            // Add this computed property
+            isActive: item.calendarStatus === "Active", // Note: "Active" not "ACTIVE"
+          }),
+        );
       }
-    },
-    [token],
-  );
+      setCalendarList(mappedData);
+    } catch (error) {
+      console.error("Error fetching calendar sessions:", error);
+    }
+  },
+  [token],
+);
 
   const handleDeleteCalendarSession = async () => {
     if (!selectedSession?.id) return;
@@ -118,7 +121,17 @@ export const Calendar = ({
       console.error("Error deleting session:", error);
     }
   };
-
+const handleDeleteClick = (item: CalendarSession) => {
+  // Check if calendarStatus is "Active" (not InActive)
+  if (item.calendarStatus === "Active") {
+    toast.error("Cannot delete an active calendar session. Please deactivate it first.", {
+      toastId: "active-session-delete"
+    });
+    return;
+  }
+  setSelectedSession(item);
+  handleToggleViewModal("DELETE");
+};
   useEffect(() => {
     handleGetAllCalendar();
     document.title = "(OMS) CALENDAR";
@@ -198,12 +211,9 @@ export const Calendar = ({
                           handleToggleViewModal("EDIT");
                         }}
                       />
-                      <DeleteButton
-                        handleDelete={() => {
-                          setSelectedSession(item);
-                          handleToggleViewModal("DELETE");
-                        }}
-                      />
+                 <DeleteButton
+  handleDelete={() => handleDeleteClick(item)}
+/>
                     </div>
                   </div>
                 ))}

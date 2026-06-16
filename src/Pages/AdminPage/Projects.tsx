@@ -32,7 +32,10 @@ export const Projects = () => {
       count: prev.tab === tab ? prev.count + 1 : 1,
     }));
   };
-
+const handleTabChange = (tab: TabType) => {
+  setActiveTab(tab);
+  setTriggerModal({ tab, count: 0 });
+};
   return (
     <div className="flex flex-col flex-grow shadow-lg p-0.5 sm:p-0.5 rounded-lg bg-gray-100 overflow-hidden">
       <div className="min-h-screen w-full flex flex-col shadow-lg bg-white rounded-md">
@@ -71,21 +74,22 @@ export const Projects = () => {
           
           {/* Tab Navigation */}
           <div className="flex w-full sm:w-auto p-1 bg-[#F1F5F9] rounded-xl border border-gray-200">
-            {(["DETAILS", "CATEGORY", "ASSIGN"] as TabType[]).map((tab) => {
+            {(["CATEGORY", "DETAILS", "ASSIGN"] as TabType[]).map((tab) => {
               // Hide admin-only tabs if user isn't admin
               if (!isAdmin && (tab === "DETAILS" || tab === "CATEGORY")) return null;
 
               return (
                 <button
                   key={tab}
-                  onClick={() => setActiveTab(tab)}
+                onClick={() => handleTabChange(tab)}
                   className={`flex-1 sm:flex-none px-2 sm:px-6 py-1 text-sm font-bold transition-all duration-200 rounded-lg ${
                     activeTab === tab
                       ? "bg-white text-[#334155] shadow-sm"
                       : "text-[#64748B] hover:text-[#334155]"
                   }`}
                 >
-                  {tab === "DETAILS" ? "Project Details" : tab === "CATEGORY" ? "Project Categories" : "Assign Projects"}
+                  {/* {tab === "DETAILS" ? "Project Details" : tab === "CATEGORY" ? "Project Categories" : "Assign Projects"} */}
+                    {tab === "CATEGORY" ? "Project Categories" : tab === "DETAILS" ? "Project Details" : "Assign Projects"}
                 </button>
               );
             })}

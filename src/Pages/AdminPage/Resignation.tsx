@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
-
+import { toast } from "react-toastify";
 import { ShowDataNumber } from "../../Components/Pagination/ShowDataNumber";
 import { Pagination } from "../../Components/Pagination/Pagination";
 
@@ -229,23 +229,48 @@ export const Resignation = ({
                       {getStatusBadge(res.approval_status)}
                     </div>
 
-                    <div className="flex items-center justify-end gap-1 w-[140px]">
-                      <ViewButton handleView={() => handleViewClick(res)} />
+<div className="flex items-center justify-end gap-1 w-[140px]">
+  <ViewButton handleView={() => handleViewClick(res)} />
 
-                      {isAdmin && (
-                        <>
-                          <EditButton
-                            handleUpdate={() => handleEditClick(res)}
-                          />
-                          <DeleteButton
-                            handleDelete={() => {
-                              setSelectedId(res.id);
-                              handleToggleViewModal("DELETE");
-                            }}
-                          />
-                        </>
-                      )}
-                    </div>
+  {isAdmin && (
+    <>
+      {/* Edit button - shows toast for ACCEPTED status */}
+      <div className={res.approval_status?.toUpperCase() === "ACCEPTED" ? "opacity-50 cursor-not-allowed" : ""}>
+        <EditButton
+          handleUpdate={() => {
+            if (res.approval_status?.toUpperCase() === "ACCEPTED") {
+              toast.error("Cannot edit an accepted resignation", {
+                toastId: `edit-accepted-${res.id}`,
+                position: "top-right",
+                autoClose: 3000,
+              });
+              return;
+            }
+            handleEditClick(res);
+          }}
+        />
+      </div>
+
+      {/* Delete button - shows toast for ACCEPTED status */}
+      <div className={res.approval_status?.toUpperCase() === "ACCEPTED" ? "opacity-50 cursor-not-allowed" : ""}>
+        <DeleteButton
+          handleDelete={() => {
+            if (res.approval_status?.toUpperCase() === "ACCEPTED") {
+              toast.error("Cannot delete an accepted resignation", {
+                toastId: `delete-accepted-${res.id}`,
+                position: "top-right",
+                autoClose: 3000,
+              });
+              return;
+            }
+            setSelectedId(res.id);
+            handleToggleViewModal("DELETE");
+          }}
+        />
+      </div>
+    </>
+  )}
+</div>
                   </div>
                 ))}
               </div>

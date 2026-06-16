@@ -68,10 +68,10 @@ export const ViewUserDetailModal = ({
               <h2 className="text-2xl font-bold text-gray-800">
                 {viewUserDetail.name}
               </h2>
-              <p className="text-blue-500 font-semibold">
+              {/* <p className="text-blue-500 font-semibold">
                 {viewUserDetail.role}
-              </p>
-              <p className="text-gray-500 text-sm">{viewUserDetail.email}</p>
+              </p> */}
+              {/* <p className="text-gray-500 text-sm">{viewUserDetail.email}</p> */}
             </div>
           </div>
 

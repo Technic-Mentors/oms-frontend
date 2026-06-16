@@ -8,7 +8,14 @@ import { BASE_URL } from "../../Content/URL";
 import { useAppSelector } from "../../redux/Hooks";
 import { toast } from "react-toastify";
 import { TextareaField } from "../InputFields/TextareaField";
-
+const isValidEmail = (email: string): boolean => {
+  if (email.length > 45) return false;
+  if (email.length < 5) return false;
+  
+  const emailRegex =
+    /^(?!\.)(?!.*\.\.)[a-zA-Z0-9._+-]+(?<!\.)@(?!(?:-|\.)).*?(?<!-)\.[a-zA-Z]{2,}$/;
+  return emailRegex.test(email);
+};
 type AddCustomerProps = {
   setModal: () => void;
   handleGetAllSupplier: () => void;
@@ -59,7 +66,7 @@ export const AddSupplier = ({
     if (name === "supplierEmail") {
       value = value.toLowerCase();
       value = value.replace(/[^a-z0-9@._%+-]/g, "");
-      value = value.slice(0, 100);
+        value = value.slice(0, 45);
     }
 
     if (name === "supplierContact") {
@@ -70,6 +77,13 @@ export const AddSupplier = ({
       ...prev,
       [name]: value,
     }));
+    const [local, domain] = value.split("@");
+  if (local?.includes("..")) return;
+  if (local?.startsWith(".")) return;
+  if (local?.endsWith(".") && !domain) return;
+  if (domain?.startsWith(".")) return;
+  if (local?.startsWith("-") || local?.endsWith("-")) return;
+  if (domain?.startsWith("-") || domain?.endsWith("-")) return;
   };
 
   const handlerSubmitted = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -93,12 +107,20 @@ export const AddSupplier = ({
       return;
     }
 
-    if (!/^[a-z0-9._%+-]+@gmail\.com$/.test(supplierEmail)) {
-      toast.error("Email must be a valid @gmail.com address", {
-        toastId: "valid-domain",
-      });
-      return;
-    }
+  if (supplierEmail.length > 45) {
+    toast.error("Email must not exceed 45 characters", {
+      toastId: "email-max-length",
+    });
+    return;
+  }
+
+  // REPLACE the existing email validation with this:
+  if (!isValidEmail(supplierEmail)) {
+    toast.error("Please enter a valid email address", {
+      toastId: "valid-email",
+    });
+    return;
+  }
 
     setLoading(true);
     try {
@@ -154,6 +176,7 @@ export const AddSupplier = ({
               name="supplierEmail"
               handlerChange={handlerChange}
               value={supplierData.supplierEmail}
+               maxLength={45}  // ADD THIS LINE
             />
 
             <div className="md:col-span-2">

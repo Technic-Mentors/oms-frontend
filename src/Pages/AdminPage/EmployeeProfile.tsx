@@ -93,7 +93,7 @@ export const EmployeeProfile = () => {
                     rounded-full text-sm font-bold"
                   >
                     <ShieldCheck className="w-4 h-4" />
-                    {currentUser?.role ?? "Staff Member"}
+                    { "Employee"}
                   </div>
                 </div>
               </div>

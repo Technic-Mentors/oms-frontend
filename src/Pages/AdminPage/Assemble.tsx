@@ -41,7 +41,10 @@ export const Assemble = () => {
       count: prev.tab === tab ? prev.count + 1 : 1,
     }));
   };
-
+const handleTabChange = (tab: TabType) => {
+  setActiveTab(tab);
+  setTriggerModal({ tab, count: 0 });
+};
   return (
     <div className="flex flex-col flex-grow shadow-lg p-1 sm:p-1 rounded-lg bg-gray-100 overflow-hidden">
       <div className="min-h-screen w-full flex flex-col shadow-lg bg-white rounded-md">
@@ -105,7 +108,7 @@ export const Assemble = () => {
             ).map((tab) => (
               <button
                 key={tab}
-                onClick={() => setActiveTab(tab)}
+                onClick={() => handleTabChange(tab)}
                 className={`flex-1 sm:flex-none px-2 sm:px-6 py-1 text-sm font-bold transition-all duration-200 rounded-lg ${
                   activeTab === tab
                     ? "bg-white text-[#334155] shadow-sm"

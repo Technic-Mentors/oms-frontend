@@ -26,9 +26,9 @@ export const ViewAssignProject = ({
               <p className="flex items-center gap-2 font-semibold text-gray-800">
                 <FaUser className="text-blue-500 text-xs" /> {viewProject.name}
               </p>
-              <p className="flex items-center gap-2 text-xs text-gray-500 mt-1">
+              {/* <p className="flex items-center gap-2 text-xs text-gray-500 mt-1">
                 <FaIdBadge /> ID: {viewProject.employee_id}
-              </p>
+              </p> */}
             </div>
             <div className="bg-blue-100 text-blue-600 px-2 py-1 rounded text-xs font-bold">
               {viewProject.projects.length} Projects

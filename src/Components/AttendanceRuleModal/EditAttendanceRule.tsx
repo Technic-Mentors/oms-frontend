@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { AddButton } from "../CustomButtons/AddButton";
 import { CancelBtn } from "../CustomButtons/CancelBtn";
 import { Title } from "../Title";
@@ -64,6 +64,7 @@ export const EditAttendanceRule = ({
   selectData,
 }: EditAttendanceProps) => {
   const { currentUser } = useAppSelector((state) => state.officeState);
+  const [selectedOffDays, setSelectedOffDays] = useState<string[]>([]);
   const [updateConfig, setUpdateConfig] = useState<ALLCONFIGT | null>(
     selectData,
   );
@@ -80,61 +81,68 @@ export const EditAttendanceRule = ({
     }
   };
 
-  const handlerSubmitted = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!updateConfig) return;
+const handlerSubmitted = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+  if (!updateConfig) return;
 
-    const { startTime, endTime, lateTime, halfLeave } = updateConfig;
+  const { startTime, endTime, lateTime, halfLeave } = updateConfig;
 
-    if (
-      lateTime < startTime ||
-      (lateTime > endTime && halfLeave < startTime) ||
-      halfLeave > endTime
-    ) {
-      toast.error(
-        "Late and Half Leave Time must be between Start Time and End Time",
-      );
-      return;
-    }
+  // Validate off days selection
+  if (selectedOffDays.length === 0) {
+    toast.error("Please select at least one off day");
+    return;
+  }
 
-    if (lateTime < startTime || lateTime > endTime) {
-      toast.error("Late Time must be between Start Time and End Time");
-      return;
-    }
+  if (lateTime < startTime || lateTime > endTime) {
+    toast.error("Late Time must be between Start Time and End Time");
+    return;
+  }
 
-    if (halfLeave < startTime || halfLeave > endTime) {
-      toast.error("Half Leave Time must be between Start Time and End Time");
-      return;
-    }
+  if (halfLeave < startTime || halfLeave > endTime) {
+    toast.error("Half Leave Time must be between Start Time and End Time");
+    return;
+  }
 
-    if (startTime >= endTime) {
-      toast.error("Start Time must be before End Time");
-      return;
-    }
+  if (startTime >= endTime) {
+    toast.error("Start Time must be before End Time");
+    return;
+  }
 
-    setLoading(true);
+  setLoading(true);
 
-    try {
-      await axios.put(
-        `${BASE_URL}/api/admin/updateTime/${updateConfig.id}`,
-        updateConfig,
-        {
-          headers: {
-            Authorization: token,
-          },
+  try {
+    // Prepare payload with off days as comma-separated string
+    const payload = {
+      ...updateConfig,
+      offDay: selectedOffDays.join(','), // Convert array to comma-separated string
+    };
+
+    await axios.put(
+      `${BASE_URL}/api/admin/updateTime/${updateConfig.id}`,
+      payload,
+      {
+        headers: {
+          Authorization: token,
         },
-      );
-      handleGetAllTimeConfig();
-      setModal();
-      toast.success("Configuration updated successfully");
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to update configuration");
-    } finally {
-      setLoading(false);
-    }
-  };
-
+      },
+    );
+    handleGetAllTimeConfig();
+    setModal();
+    toast.success("Configuration updated successfully");
+  } catch (error) {
+    console.error(error);
+    toast.error("Failed to update configuration");
+  } finally {
+    setLoading(false);
+  }
+};
+useEffect(() => {
+  if (selectData?.offDay) {
+    // Parse offDay string (e.g., "Monday,Sunday" or "Monday,Saturday")
+    const offDaysArray = selectData.offDay.split(',').filter(Boolean);
+    setSelectedOffDays(offDaysArray);
+  }
+}, [selectData]);
   return (
     <div>
       <div
@@ -170,14 +178,34 @@ export const EditAttendanceRule = ({
                 handlerChange={handlerChange}
               />
 
-              <OptionField
-                labelName="Off Day *"
-                name="offDay"
-                value={updateConfig?.offDay ?? ""}
-                handlerChange={handlerChange}
-                optionData={dayOptions}
-                inital="Select Off Day"
-              />
+        <div className="md:col-span-2">
+  <label className="block text-gray-600 text-xs font-semibold mb-2">
+    Off Days * (Select multiple)
+  </label>
+  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    {dayOptions.map((day) => (
+      <label key={day.id} className="flex items-center gap-2 cursor-pointer">
+        <input
+          type="checkbox"
+          value={day.value}
+          checked={selectedOffDays.includes(day.value)}
+          onChange={(e) => {
+            if (e.target.checked) {
+              setSelectedOffDays([...selectedOffDays, day.value]);
+            } else {
+              setSelectedOffDays(selectedOffDays.filter((d) => d !== day.value));
+            }
+          }}
+          className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+        />
+        <span className="text-sm text-gray-700">{day.label}</span>
+      </label>
+    ))}
+  </div>
+  <p className="text-xs text-gray-500 mt-1">
+    Select all days that should be considered as off days
+  </p>
+</div>
 
               <InputField
                 labelName="Late Time *"

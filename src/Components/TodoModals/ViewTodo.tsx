@@ -46,15 +46,7 @@ export const ViewTodo = ({ setIsOpenModal, viewTodo }: ViewTodoProps) => {
               Assignment Details
             </h3>
             <div className="grid grid-cols-2 gap-y-4 pt-2">
-              <div>
-                <label className="flex items-center gap-2 text-[10px] font-bold text-gray-500 uppercase">
-                  <FaUser className="text-gray-400" /> Employee ID
-                </label>
-
-                <p className="text-gray-800 font-medium">
-                  {viewTodo.employee_id || "Unassigned"}
-                </p>
-              </div>
+           
 
               <div>
                 <label className="flex items-center gap-2 text-[10px] font-bold text-gray-500 uppercase">

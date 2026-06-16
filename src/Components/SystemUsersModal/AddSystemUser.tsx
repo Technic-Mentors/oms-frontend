@@ -33,6 +33,9 @@ const initialState = {
 };
 
 const isValidEmail = (email: string): boolean => {
+  if (email.length > 45) return false;
+  if (email.length < 5) return false;
+  
   const emailRegex =
     /^(?!\.)(?!.*\.\.)[a-zA-Z0-9._+-]+(?<!\.)@(?!(?:-|\.)).*?(?<!-)\.[a-zA-Z]{2,}$/;
   return emailRegex.test(email);
@@ -94,9 +97,20 @@ export const AddSystemUser = ({
       processedValue = processedValue.slice(0, 50);
     }
 
-    if (name === "email") {
-      processedValue = processedValue.replace(/[^a-zA-Z0-9@._+-]/g, "");
-    }
+  if (name === "email") {
+  // Add 45 character limit
+  processedValue = processedValue.slice(0, 45);
+  processedValue = processedValue.replace(/[^a-zA-Z0-9@._+-]/g, "");
+  
+  // Add validation while typing
+  const [local, domain] = processedValue.split("@");
+  if (local?.includes("..")) return;
+  if (local?.startsWith(".")) return;
+  if (local?.endsWith(".") && !domain) return;
+  if (domain?.startsWith(".")) return;
+  if (local?.startsWith("-") || local?.endsWith("-")) return;
+  if (domain?.startsWith("-") || domain?.endsWith("-")) return;
+}
 
     if (name === "contact") {
       processedValue = processedValue.replace(/\D/g, "").slice(0, 11);
@@ -184,10 +198,17 @@ export const AddSystemUser = ({
       return;
     }
 
-    if (!isValidEmail(email)) {
-      toast.error("Invalid email format");
-      return;
-    }
+// Add email length validation
+if (email.length > 45) {
+  toast.error("Email must not exceed 45 characters");
+  return;
+}
+
+// Add email format validation
+if (!isValidEmail(email)) {
+  toast.error("Please enter a valid email address (e.g., name@domain.com)");
+  return;
+}
 
     if (password !== confirmPassword) {
       toast.error("Passwords do not match");
@@ -269,13 +290,14 @@ export const AddSystemUser = ({
               handlerChange={handlerChange}
             />
 
-            <InputField
-              labelName="Email Address *"
-              type="email"
-              name="email"
-              value={formData.email}
-              handlerChange={handlerChange}
-            />
+        <InputField
+  labelName="Email Address *"
+  type="email"
+  name="email"
+  value={formData.email}
+  handlerChange={handlerChange}
+  maxLength={45}  // ADD THIS LINE
+/>
 
             <div className="flex flex-col gap-1">
               <label className="text-sm font-semibold text-gray-700">

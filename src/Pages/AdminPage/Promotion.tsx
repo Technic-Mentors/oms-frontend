@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
-
+import { toast } from "react-toastify";
 import { ShowDataNumber } from "../../Components/Pagination/ShowDataNumber";
 import { Pagination } from "../../Components/Pagination/Pagination";
 
@@ -223,36 +223,50 @@ export const Promotion = ({
                     <div className="flex items-center">
                       {getStatusBadge(promotion.approval)}
                     </div>
+<div className="flex items-center justify-end gap-1 w-[140px]">
+  <ViewButton
+    handleView={() => {
+      setSelectedPromotion(promotion);
+      setIsOpenModal("VIEW");
+    }}
+  />
 
-                    <div className="flex items-center justify-end gap-1 w-[140px]">
-                      <ViewButton
-                        handleView={() => {
-                          setSelectedPromotion(promotion);
-                          setIsOpenModal("VIEW");
-                        }}
-                      />
+  {isAdmin && (
+    <>
+      {/* Edit button - shows toast for ACCEPTED status */}
+      <EditButton
+        handleUpdate={() => {
+          if (promotion.approval === "accepted") {
+            toast.error("Cannot edit an accepted promotion", {
+              toastId: `edit-accepted-${promotion.id}`,
+              position: "top-right",
+              autoClose: 3000,
+            });
+            return;
+          }
+          setSelectedPromotion(promotion);
+          setIsOpenModal("EDIT");
+        }}
+      />
 
-                      {isAdmin && (
-                        <>
-                          {/* Edit tabhi dikhega jab promotion accept na hui ho */}
-                          {promotion.approval !== "ACCEPTED" && (
-                            <EditButton
-                              handleUpdate={() => {
-                                setSelectedPromotion(promotion);
-                                setIsOpenModal("EDIT");
-                              }}
-                            />
-                          )}
-
-                          <DeleteButton
-                            handleDelete={() => {
-                              setSelectedId(promotion.id);
-                              setIsOpenModal("DELETE");
-                            }}
-                          />
-                        </>
-                      )}
-                    </div>
+      {/* Delete button - shows toast for ACCEPTED status */}
+      <DeleteButton
+        handleDelete={() => {
+          if (promotion.approval === "accepted") {
+            toast.error("Cannot delete an accepted promotion", {
+              toastId: `delete-accepted-${promotion.id}`,
+              position: "top-right",
+              autoClose: 3000,
+            });
+            return;
+          }
+          setSelectedId(promotion.id);
+          setIsOpenModal("DELETE");
+        }}
+      />
+    </>
+  )}
+</div>
                   </div>
                 ))}
               </div>

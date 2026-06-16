@@ -62,36 +62,95 @@ export const AddLoan = ({ setModal, handleRefresh }: AddAttendanceProps) => {
   }, [currentUser]);
 
   /* ================= INPUT HANDLER ================= */
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
+const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const { name, value } = e.target;
+  let updatedValue = value;
 
-    let updatedValue = value;
+  if (name === "contact") {
+    // Only numbers, max 11 digits (mobile number)
+    updatedValue = value.replace(/\D/g, "").slice(0, 11);
+  }
 
-    if (name === "contact") {
-      updatedValue = value.replace(/\D/g, "").slice(0, 11);
+  if (name === "loanAmount") {
+    // Remove non-digits and leading zeros, max 10 digits (up to 9,999,999,999)
+    let numbers = value.replace(/\D/g, "");
+    // Remove leading zeros
+    if (numbers.length > 1 && numbers.startsWith('0')) {
+      numbers = numbers.replace(/^0+/, '');
+      if (numbers === '') numbers = '0';
     }
+    // Limit to 10 digits
+    updatedValue = numbers.slice(0, 10);
+  }
 
-    if (name === "loanAmount") {
-      updatedValue = value.replace(/\D/g, "").slice(0, 12);
+  if (name === "deduction") {
+    // Remove non-digits and leading zeros, max 10 digits
+    let numbers = value.replace(/\D/g, "");
+    // Remove leading zeros
+    if (numbers.length > 1 && numbers.startsWith('0')) {
+      numbers = numbers.replace(/^0+/, '');
+      if (numbers === '') numbers = '0';
     }
+    // Limit to 10 digits
+    updatedValue = numbers.slice(0, 10);
+  }
 
-    if (name === "remainingAmount") {
-      updatedValue = value.replace(/\D/g, "").slice(0, 12);
-    }
+  if (name === "remainingAmount") {
+    updatedValue = value.replace(/\D/g, "").slice(0, 10);
+  }
 
-    if (name === "deduction") {
-      updatedValue = value.replace(/\D/g, "").slice(0, 12);
-    }
+  setAddLoan((prev) => ({ ...prev, [name]: updatedValue }));
+};
+// Validate loan amount
+const validateLoanAmount = (amount: string): { isValid: boolean; error?: string } => {
+  if (!amount) {
+    return { isValid: false, error: "Loan amount is required" };
+  }
+  
+  const numAmount = Number(amount);
+  
+  if (isNaN(numAmount) || numAmount <= 0) {
+    return { isValid: false, error: "Loan amount must be greater than 0" };
+  }
+  
+  if (amount.length < 3) {
+    return { isValid: false, error: "Loan amount must be at least 3 digits (minimum 100)" };
+  }
+  
+  if (numAmount > 9999999999) {
+    return { isValid: false, error: "Loan amount cannot exceed 9,999,999,999" };
+  }
+  
+  return { isValid: true };
+};
 
-    if (name === "loanAmount" || name === "deduction") {
-      const onlyNumbers = value.replace(/[^0-9]/g, "");
-
-      updatedValue = onlyNumbers.replace(/^0+(?=\d)/, "");
-    }
-
-    setAddLoan((prev) => ({ ...prev, [name]: updatedValue }));
-  };
-
+// Validate deduction amount
+const validateDeduction = (deduction: string, loanAmount: string): { isValid: boolean; error?: string } => {
+  if (!deduction) {
+    return { isValid: false, error: "Deduction amount is required" };
+  }
+  
+  const numDeduction = Number(deduction);
+  const numLoan = Number(loanAmount) || 0;
+  
+  if (isNaN(numDeduction) || numDeduction < 0) {
+    return { isValid: false, error: "Deduction must be a valid number" };
+  }
+  
+  if (deduction.length < 3 && numDeduction > 0) {
+    return { isValid: false, error: "Deduction must be at least 3 digits (minimum 100)" };
+  }
+  
+  if (numDeduction > 9999999999) {
+    return { isValid: false, error: "Deduction cannot exceed 9,999,999,999" };
+  }
+  
+  if (numDeduction > numLoan) {
+    return { isValid: false, error: "Deduction cannot be greater than Loan Amount" };
+  }
+  
+  return { isValid: true };
+};
   /* ================= USER SELECT HANDLER (FIXED) ================= */
   const handleUserSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedId = e.target.value;
@@ -145,23 +204,31 @@ export const AddLoan = ({ setModal, handleRefresh }: AddAttendanceProps) => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (addLoan.loanAmount.length < 3) {
-      return toast.error("Loan Amount must be minimum 3 characters long");
-    }
+// Validate token
+if (!token) {
+  return toast.error("Unauthorized", { toastId: "loan-unauthorized" });
+}
 
-    if (!token)
-      return toast.error("Unauthorized", { toastId: "loan-unauthorized" });
+// Validate required fields
+if (!addLoan.employee_id || !addLoan.loanAmount || !addLoan.applyDate) {
+  return toast.error("Please fill all required fields", {
+    toastId: "required",
+  });
+}
 
-    if (!addLoan.employee_id || !addLoan.loanAmount || !addLoan.applyDate)
-      return toast.error("Please fill all required fields", {
-        toastId: "required",
-      });
+// Validate loan amount
+const loanValidation = validateLoanAmount(addLoan.loanAmount);
+if (!loanValidation.isValid) {
+  return toast.error(loanValidation.error);
+}
 
-    const loanAmount = Number(addLoan.loanAmount);
-    if (loanAmount <= 0)
-      return toast.error("Loan amount must be greater than 0", {
-        toastId: "error",
-      });
+// Validate deduction
+const deductionValidation = validateDeduction(addLoan.deduction, addLoan.loanAmount);
+if (!deductionValidation.isValid) {
+  return toast.error(deductionValidation.error);
+}
+
+const loanAmount = Number(addLoan.loanAmount);
 
     const payload: AddLoanType = {
       employee_id: addLoan.employee_id,
@@ -262,28 +329,34 @@ export const AddLoan = ({ setModal, handleRefresh }: AddAttendanceProps) => {
               handlerChange={handleInputChange}
             />
 
-            <InputField
-              labelName="Loan Amount *"
-              type="number"
-              name="loanAmount"
-              value={addLoan.loanAmount}
-              handlerChange={handleInputChange}
-              minLength={3}
-              maxLength={12}
-            />
-
-            <div className="md:col-span-2">
-              <InputField
-                labelName="Deduction *"
-                type="number"
-                name="deduction"
-                value={addLoan.deduction}
-                handlerChange={handleInputChange}
-                minLength={3}
-                maxLength={12}
-              />
-            </div>
-
+       <div className="flex flex-col">
+  <InputField
+    labelName="Loan Amount *"
+    type="text"
+    name="loanAmount"
+    value={addLoan.loanAmount}
+    handlerChange={handleInputChange}
+    maxLength={10}
+    placeHolder="Enter loan amount (numbers only)"
+  />
+  <p className="text-xs text-gray-400 mt-1">
+    Min: 100 (3 digits) | Max: 9,999,999,999 (10 digits)
+  </p>
+</div>
+<div className="flex flex-col md:col-span-2">
+  <InputField
+    labelName="Deduction *"
+    type="text"
+    name="deduction"
+    value={addLoan.deduction}
+    handlerChange={handleInputChange}
+    maxLength={10}
+    placeHolder="Enter deduction amount (numbers only)"
+  />
+  <p className="text-xs text-gray-400 mt-1">
+    Min: 100 (3 digits) | Max: 9,999,999,999 (10 digits) | Cannot exceed Loan Amount
+  </p>
+</div>
             {/* <InputField
               labelName="Remaining Amount"
               type="number"

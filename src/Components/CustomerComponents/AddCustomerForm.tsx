@@ -9,7 +9,14 @@ import axios, { AxiosError } from "axios";
 import { BASE_URL } from "../../Content/URL";
 import { useAppSelector } from "../../redux/Hooks";
 import { toast } from "react-toastify";
-
+const isValidEmail = (email: string): boolean => {
+  if (email.length > 45) return false;
+  if (email.length < 5) return false;
+  
+  const emailRegex =
+    /^(?!\.)(?!.*\.\.)[a-zA-Z0-9._+-]+(?<!\.)@(?!(?:-|\.)).*?(?<!-)\.[a-zA-Z]{2,}$/;
+  return emailRegex.test(email);
+};
 type AddCustomerProps = {
   setIsOpenModal: () => void;
   handleGetAllCustomers: () => void;
@@ -34,32 +41,48 @@ export const AddCustomer = ({
 
   const token = currentUser?.token;
 
-  const handlerChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    const { name } = e.target;
-    let value = e.target.value;
+const handlerChange = (
+  e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+) => {
+  const { name } = e.target;
+  let value = e.target.value;
 
-    // remove leading spaces
-    value = value.replace(/^\s+/, "");
+  // remove leading spaces
+  value = value.replace(/^\s+/, "");
 
-    if (name === "customerName") {
-      value = value.replace(/[^a-zA-Z\s]/g, "");
-      value = value
-        .split(" ")
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(" ");
-      value = value.slice(0, 50);
-    }
+  if (name === "customerName") {
+    value = value.replace(/[^a-zA-Z\s]/g, "");
+    value = value
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+    value = value.slice(0, 50);
+  }
 
-    if (name === "companyName") {
-      value = value.replace(/[^a-zA-Z\s]/g, "");
-      value = value
-        .split(" ")
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(" ");
-      value = value.slice(0, 50);
-    }
+  // ADD THIS NEW BLOCK FOR EMAIL:
+  if (name === "email") {
+    value = value.slice(0, 45);
+    value = value.replace(/[^a-zA-Z0-9@._+-]/g, "");
+    
+    // Basic email format validation while typing
+    const [local, domain] = value.split("@");
+    if (local?.includes("..")) return;
+    if (local?.startsWith(".")) return;
+    if (local?.endsWith(".") && !domain) return;
+    if (domain?.startsWith(".")) return;
+    if (local?.startsWith("-") || local?.endsWith("-")) return;
+    if (domain?.startsWith("-") || domain?.endsWith("-")) return;
+  }
+
+  if (name === "companyName") {
+    value = value.replace(/[^a-zA-Z\s]/g, "");
+    value = value
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+    value = value.slice(0, 50);
+  }
+
 
     if (name === "customerAddress") {
       value = value.replace(/[^a-zA-Z0-9\s,.-]/g, "");
@@ -106,7 +129,17 @@ export const AddCustomer = ({
         },
       );
     }
+if (cleanedData.email.length > 45) {
+  return toast.error("Email must not exceed 45 characters", {
+    toastId: "email-max-length",
+  });
+}
 
+if (!isValidEmail(cleanedData.email)) {
+  return toast.error("Please enter a valid email address", {
+    toastId: "invalid-email",
+  });
+}
     if (!/^\d{11}$/.test(cleanedData.customerContact)) {
       return toast.error("Contact number must be 11 digits", {
         toastId: "contact-length",
@@ -196,6 +229,7 @@ export const AddCustomer = ({
               name="email"
               handlerChange={handlerChange}
               value={customerData.email}
+               maxLength={45} 
             />
 
             <InputField

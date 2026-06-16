@@ -278,26 +278,32 @@ export const Progress = ({
                       <span>{formatDate(item.date)}</span>
                     </div>
 
-                    <div className="flex items-center justify-end gap-1 pr-2">
-                      <ViewButton
-                        handleView={() => {
-                          setViewProgressData(item);
-                          setIsViewModalOpen(true);
-                        }}
-                      />
-                      <EditButton
-                        handleUpdate={() => {
-                          setSelectedProgress(item);
-                          setIsOpenModal("EDIT");
-                        }}
-                      />
-                      <DeleteButton
-                        handleDelete={() => {
-                          setSelectedId(item.id);
-                          setIsOpenModal("DELETE");
-                        }}
-                      />
-                    </div>
+                 <div className="flex items-center justify-end gap-1 pr-2">
+  <ViewButton
+    handleView={() => {
+      setViewProgressData(item);
+      setIsViewModalOpen(true);
+    }}
+  />
+  
+  {/* Only show Edit and Delete buttons for admin role */}
+  {currentUser?.role === "admin" && (
+    <>
+      <EditButton
+        handleUpdate={() => {
+          setSelectedProgress(item);
+          setIsOpenModal("EDIT");
+        }}
+      />
+      <DeleteButton
+        handleDelete={() => {
+          setSelectedId(item.id);
+          setIsOpenModal("DELETE");
+        }}
+      />
+    </>
+  )}
+</div>
                   </div>
                 ))}
               </div>

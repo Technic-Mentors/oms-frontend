@@ -10,7 +10,14 @@ import { Title } from "../Title";
 
 import { BASE_URL } from "../../Content/URL";
 import { useAppSelector } from "../../redux/Hooks";
-
+const isValidEmail = (email: string): boolean => {
+  if (email.length > 45) return false;
+  if (email.length < 5) return false;
+  
+  const emailRegex =
+    /^(?!\.)(?!.*\.\.)[a-zA-Z0-9._+-]+(?<!\.)@(?!(?:-|\.)).*?(?<!-)\.[a-zA-Z]{2,}$/;
+  return emailRegex.test(email);
+};
 // ✅ TYPES
 type RoleOption = {
   id: number;
@@ -107,23 +114,61 @@ export const EditSystemUser = ({
   }, [token]);
 
   // ================= INPUT HANDLER =================
-  const handlerChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-  ) => {
-    const { name, value } = e.target;
+const handlerChange = (
+  e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+) => {
+  const { name, value } = e.target;
+  let processedValue = value.replace(/^\s+/, "");
 
-    if (name === "role") {
-      const selectedRole = roles.find((r) => r.roleName === value);
-      setFormData((prev) => ({
-        ...prev,
-        role: value,
-        roleId: selectedRole ? selectedRole.id : "",
-      }));
-      return;
+  if (name === "role") {
+    const selectedRole = roles.find((r) => r.roleName === value);
+    setFormData((prev) => ({
+      ...prev,
+      role: value,
+      roleId: selectedRole ? selectedRole.id : "",
+    }));
+    return;
+  }
+
+  // NAME validation (letters, spaces, dots, hyphens - international standard)
+  if (name === "name") {
+    // Allow letters, spaces, dots, hyphens, apostrophes (international names)
+    processedValue = processedValue.replace(/[^a-zA-Z\s\.\-']/g, "");
+    
+    // Capitalize first letter of each word
+    processedValue = processedValue
+      .split(" ")
+      .map((word) => {
+        if (word.length === 0) return "";
+        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+      })
+      .join(" ");
+    
+    // Limit to 50 characters
+    processedValue = processedValue.slice(0, 50);
+  }
+
+  // CNIC validation (13 digits with dashes)
+  if (name === "cnic") {
+    const digits = processedValue.replace(/\D/g, "");
+    if (digits.length <= 5) {
+      processedValue = digits;
+    } else if (digits.length <= 12) {
+      processedValue = `${digits.slice(0, 5)}-${digits.slice(5)}`;
+    } else {
+      processedValue = `${digits.slice(0, 5)}-${digits.slice(5, 12)}-${digits.slice(12, 13)}`;
     }
+    // Prevent more than 13 digits
+    if (digits.length > 13) return;
+  }
 
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+  // CONTACT validation (exactly 11 digits)
+  if (name === "contact") {
+    processedValue = processedValue.replace(/\D/g, "").slice(0, 11);
+  }
+
+  setFormData((prev) => ({ ...prev, [name]: processedValue }));
+};
 
   // ================= IMAGE HANDLER =================
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -162,46 +207,100 @@ export const EditSystemUser = ({
   };
 
   // ================= SUBMIT =================
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+// ================= SUBMIT =================
+const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
 
-    setLoading(true);
+  const { name, contact, cnic, email, role, roleId } = formData;
 
-    try {
-      const data = new FormData();
+  // Name validation
+  if (!name || name.trim().length < 3) {
+    toast.error("Name must be at least 3 characters long");
+    return;
+  }
 
-      data.append("name", formData.name);
-      data.append("email", formData.email);
-      data.append("contact", formData.contact);
-      data.append("cnic", formData.cnic.replace(/\D/g, ""));
-      data.append("role", formData.role);
-      data.append("roleId", String(formData.roleId));
+  if (name.length > 50) {
+    toast.error("Name must not exceed 50 characters");
+    return;
+  }
 
-      if (selectedFile) {
-        data.append("image", selectedFile);
-      }
+  // Contact validation
+  if (!contact) {
+    toast.error("Phone number is required");
+    return;
+  }
 
-      await axios.put(
-        `${BASE_URL}/api/admin/updateSystemUser/${userData.id}`,
-        data,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
+  if (contact.length !== 11) {
+    toast.error("Phone number must be exactly 11 digits");
+    return;
+  }
 
-      toast.success("User updated successfully");
+  if (!/^\d{11}$/.test(contact)) {
+    toast.error("Phone number must contain only digits");
+    return;
+  }
 
-      handlerGetUsers();
-      setModal();
-    } catch (error) {
-      const err = error as AxiosError<{ message: string }>;
-      toast.error(err?.response?.data?.message || "Update failed");
-    } finally {
-      setLoading(false);
+  // CNIC validation
+  if (!cnic) {
+    toast.error("CNIC is required");
+    return;
+  }
+
+  const cnicDigits = cnic.replace(/\D/g, "");
+  if (cnicDigits.length !== 13) {
+    toast.error("CNIC must be exactly 13 digits");
+    return;
+  }
+
+  // Email validation
+  if (email && !isValidEmail(email)) {
+    toast.error("Please enter a valid email address");
+    return;
+  }
+
+  // Role validation
+  if (!role || !roleId) {
+    toast.error("Please select a role");
+    return;
+  }
+
+  setLoading(true);
+
+  try {
+    const data = new FormData();
+
+    data.append("name", formData.name);
+    data.append("email", formData.email);
+    data.append("contact", formData.contact);
+    data.append("cnic", formData.cnic.replace(/\D/g, ""));
+    data.append("role", formData.role);
+    data.append("roleId", String(formData.roleId));
+
+    if (selectedFile) {
+      data.append("image", selectedFile);
     }
-  };
+
+    await axios.put(
+      `${BASE_URL}/api/admin/updateSystemUser/${userData.id}`,
+      data,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+
+    toast.success("User updated successfully");
+
+    handlerGetUsers();
+    setModal();
+  } catch (error) {
+    const err = error as AxiosError<{ message: string }>;
+    toast.error(err?.response?.data?.message || "Update failed");
+  } finally {
+    setLoading(false);
+  }
+};
 
   // ================= UI =================
   return (
@@ -213,48 +312,59 @@ export const EditSystemUser = ({
           </div>
 
           <div className="p-4 grid grid-cols-2 gap-4">
-            <InputField
-              labelName="Full Name"
-              name="name"
-              value={formData.name}
-              handlerChange={handlerChange}
-            />
+     <InputField
+  labelName="Full Name *"
+  name="name"
+  value={formData.name}
+  handlerChange={handlerChange}
+  minLength={3}
+  maxLength={50}
+  placeHolder="Enter full name"
+/>
 
-            <InputField
-              labelName="Email"
-              name="email"
-              value={formData.email}
-              handlerChange={handlerChange}
-              readOnly={true}
-            />
+<InputField
+  labelName="Email"
+  name="email"
+  value={formData.email}
+  handlerChange={handlerChange}
+  readOnly={true}
+  maxLength={45}  // ADD THIS
+/>
 
-            <InputField
-              labelName="Contact"
-              name="contact"
-              value={formData.contact}
-              handlerChange={handlerChange}
-            />
+<InputField
+  labelName="Contact *"
+  name="contact"
+  value={formData.contact}
+  handlerChange={handlerChange}
+  maxLength={11}
+  placeHolder="03331234567"
+/>
 
-            <InputField
-              labelName="CNIC"
-              name="cnic"
-              value={formData.cnic}
-              handlerChange={handlerChange}
-            />
-
-            <select
-              name="role"
-              value={formData.role}
-              onChange={handlerChange}
-              className="border p-2 rounded"
-            >
-              <option value="">Select Role</option>
-              {roles.map((r) => (
-                <option key={r.id} value={r.roleName}>
-                  {r.roleName}
-                </option>
-              ))}
-            </select>
+<InputField
+  labelName="CNIC *"
+  name="cnic"
+  value={formData.cnic}
+  handlerChange={handlerChange}
+  maxLength={15}  // for format: 12345-1234567-1
+  placeHolder="12345-1234567-1"
+/>
+<div className="flex flex-col gap-1">
+  <label className="text-sm font-semibold text-gray-700">Role *</label>
+  <select
+    name="role"
+    value={formData.role}
+    onChange={handlerChange}
+    className="border border-gray-300 rounded-md p-2 h-[40px]"
+    required
+  >
+    <option value="">Select Role</option>
+    {roles.map((r) => (
+      <option key={r.id} value={r.roleName}>
+        {r.roleName}
+      </option>
+    ))}
+  </select>
+</div>
 
             {/* ✅ IMAGE */}
             <div className="col-span-2">

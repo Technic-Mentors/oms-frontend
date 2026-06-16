@@ -1,4 +1,3 @@
-// Header.tsx (updated with proper unread count)
 import { RxHamburgerMenu } from "react-icons/rx";
 import { RiUserFill } from "react-icons/ri";
 import headerLogo from "../assets/Desk_Logo.png";
@@ -273,9 +272,25 @@ export const Header = ({ toggleSideBar, isOpen }: IHeaderProps) => {
   return (
     <div className="bg-white w-full h-16 px-2 sm:px-4 flex shadow-md z-40 items-center relative">
       <div className="flex items-center justify-between w-full">
-        <div className="flex items-center gap-1 sm:gap-10">
+        {/* Left section - Logo and Hamburger */}
+        <div className="flex items-center gap-1 sm:gap-3">
+          {/* Hamburger Menu Button */}
+          <button
+            onClick={toggleSideBar}
+            className="text-blue-400 hover:bg-gray-100 rounded-full transition-colors flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0"
+            aria-label="Toggle sidebar"
+          >
+            <RxHamburgerMenu
+              size={26}
+              className={`transition-transform duration-300 ${
+                isOpen ? "rotate-90" : "rotate-0"
+              }`}
+            />
+          </button>
+
+          {/* Logo */}
           <div
-            className="flex items-center w-[180px] flex-shrink-0 cursor-pointer"
+            className="flex items-center flex-shrink-0 cursor-pointer"
             onClick={handleLogoClick}
           >
             <img
@@ -284,19 +299,9 @@ export const Header = ({ toggleSideBar, isOpen }: IHeaderProps) => {
               className="h-12 sm:h-14 w-auto object-contain"
             />
           </div>
-
-          <button
-            onClick={toggleSideBar}
-            className="text-blue-400 hover:bg-gray-100 rounded-full transition-colors flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12"
-            aria-label="Toggle sidebar"
-          >
-            <RxHamburgerMenu
-              size={26}
-              className={`transition-transform duration-300 ${isOpen ? "rotate-90" : "rotate-0"}`}
-            />
-          </button>
         </div>
 
+        {/* Right section - User and Notifications */}
         <div className="flex items-center gap-2 sm:gap-3 md:gap-6">
           <div className="flex items-center gap-2 sm:gap-3 relative">
             {/* Notification Bell Container */}

@@ -49,7 +49,10 @@ export const Wages = () => {
       count: prev.tab === tab ? prev.count + 1 : 1,
     }));
   };
-
+const handleTabChange = (tab: TabType) => {
+  setActiveTab(tab);
+  setTriggerModal({ tab, count: 0 });
+};
   const handleActivateClick = () => {
     setTriggerActivateModal((prev) => prev + 1);
   };
@@ -102,7 +105,7 @@ export const Wages = () => {
             {tabs.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => handleTabChange(tab.id)}
                 className={`flex-1 lg:flex-none px-2 lg:px-6 py-1 text-sm font-bold transition-all duration-200 rounded-lg whitespace-nowrap ${
                   activeTab === tab.id
                     ? "bg-white text-[#334155] shadow-sm"

@@ -52,6 +52,8 @@ const initialState: IAddUserValues = {
 };
 
 const isValidEmail = (email: string): boolean => {
+   if (email.length > 45) return false;
+  if (email.length < 5) return false;
   const emailRegex =
     /^(?!\.)(?!.*\.\.)[a-zA-Z0-9._+-]+(?<!\.)@(?!(?:-|\.)).*?(?<!-)\.[a-zA-Z]{2,}$/;
   return emailRegex.test(email);
@@ -113,6 +115,7 @@ export const AddUser = ({
     }
 
     if (name === "email") {
+      value = value.slice(0, 45);
       value = value.replace(/^\s+/, "");
       value = value.replace(/[^a-zA-Z0-9@._+-]/g, "");
 
@@ -245,7 +248,12 @@ export const AddUser = ({
       });
       return;
     }
-
+if (email.length > 45) {
+  toast.error("Email must not exceed 45 characters", {
+    toastId: "email-max-length",
+  });
+  return;
+}
     if (password.length < 8 || password.length > 20) {
       toast.error("Password must be between 8 and 20 characters", {
         toastId: "password-length",
@@ -307,7 +315,12 @@ export const AddUser = ({
     });
     return;
   }
-
+if (email.length > 45) {
+  toast.error("Email must not exceed 45 characters", {
+    toastId: "email-max-length",
+  });
+  return;
+}
   // ✅ Phone validation (exactly 11 digits)
   if (!/^\d{11}$/.test(contact)) {
     toast.error("Phone number must be exactly 11 digits", {
@@ -392,6 +405,7 @@ export const AddUser = ({
               handlerChange={handlerChange}
               value={userData.email}
               readOnly={viewType === "UPDATE"}
+               maxLength={45}
             />
             <InputField
               labelName="Phone Number *"
