@@ -354,7 +354,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     name="role"
     value={formData.role}
     onChange={handlerChange}
-    className="border border-gray-300 rounded-md p-2 h-[40px]"
+    className="border border-gray-300 rounded-md p-2 h-[40px] text-black"
     required
   >
     <option value="">Select Role</option>

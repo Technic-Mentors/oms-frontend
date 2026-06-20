@@ -243,7 +243,7 @@ export const ViewQuotation = ({ setModal, quotation }: ViewQuotationProps) => {
                   {items.map((item, index) => (
                     <div
                       key={item.id}
-                      className="grid grid-cols-12 text-sm p-2 hover:bg-gray-50"
+                      className="grid grid-cols-12 text-sm p-2 hover:bg-gray-50 text-black"
                     >
                       <span className="col-span-1 text-center text-gray-400">
                         {index + 1}
@@ -273,10 +273,10 @@ export const ViewQuotation = ({ setModal, quotation }: ViewQuotationProps) => {
             <div className="pt-4 flex justify-end">
               <div className="w-full sm:w-80 space-y-3">
                 <div className="flex justify-between text-sm">
-                  <span className="font-semibold text-gray-600 uppercase">
+                  <span className="font-semibold text-black uppercase">
                     Sub Total
                   </span>
-                  <span className="font-medium">
+                  <span className="font-medium text-black">
                     {subTotal.toLocaleString()}
                   </span>
                 </div>

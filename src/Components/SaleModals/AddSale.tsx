@@ -236,14 +236,14 @@ export const AddSale = ({ setModal, handleGetsales }: AddSaleProps) => {
 
             <div className="max-h-40 overflow-y-auto">
               {cart.length === 0 ? (
-                <div className="text-center text-gray-400 p-4 text-xs italic">
+                <div className="text-center text-black p-4 text-xs italic">
                   No items in cart
                 </div>
               ) : (
                 cart.map((item, index) => (
                   <div
                     key={item.id}
-                    className="grid grid-cols-5 text-xs border-b last:border-0 hover:bg-gray-50 items-center text-center py-1"
+                    className="grid grid-cols-5 text-xs border-b last:border-0 hover:bg-gray-50 items-center text-center py-1 text-black"
                   >
                     <span className="text-gray-500">{index + 1}</span>
                     <span className="text-left truncate px-1">

@@ -94,7 +94,7 @@ export const ViewSale = ({ setIsOpenModal, viewSale }: ViewSaleProps) => {
                   {viewSale.items.map((item, idx) => (
                     <tr
                       key={idx}
-                      className="border-b last:border-0 hover:bg-gray-50"
+                      className="border-b last:border-0 hover:bg-gray-50 text-black"
                     >
                       <td className="p-2">{idx + 1}</td>
                       <td className="p-2">{item.projectName}</td>

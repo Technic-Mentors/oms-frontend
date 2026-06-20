@@ -322,13 +322,13 @@ export const AddQuotation = ({ setModal, onAdded }: AddQuotationProps) => {
                 cart.map((item, index) => (
                   <div
                     key={item.id}
-                    className="grid grid-cols-5 text-xs border-b last:border-0 hover:bg-gray-50 items-center text-center py-1"
+                    className="grid grid-cols-5 text-xs border-b last:border-0 hover:bg-gray-50 items-center text-center py-1 text-black"
                   >
                     {/* Sr */}
-                    <span className="text-gray-500">{index + 1}</span>
+                    <span className="text-black">{index + 1}</span>
 
                     {/* Project */}
-                    <span className="text-left truncate px-1">
+                    <span className="text-left truncate px-1 text-black">
                       {item.projectName}
                     </span>
 

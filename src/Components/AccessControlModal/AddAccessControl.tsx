@@ -129,7 +129,7 @@ export const AddAccessControl = ({ onClose, onSuccess }: AddAccessControlProps) 
               <select
                 value={selectedRoleId}
                 onChange={(e) => setSelectedRoleId(e.target.value)}
-                className="w-full p-2.5 border rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                className="w-full p-2.5 border rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all text-black"
                 disabled={isLoading || isSaving}
                 required
               >
