@@ -97,12 +97,7 @@ export const ViewPromotion = ({
                 <h2 className="text-xl font-extrabold text-slate-800 leading-tight">
                   {promotionData.employee_name}
                 </h2>
-                <p className="text-sm font-medium text-slate-500">
-                  Employee ID:{" "}
-                  <span className="text-blue-600">
-                    #{promotionData.employee_id}
-                  </span>
-                </p>
+             
               </div>
             </div>
             

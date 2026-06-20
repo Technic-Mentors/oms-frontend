@@ -262,28 +262,59 @@ export const Todo = ({
                       </span>
                     </div>
 
-                    {/* Actions */}
-               {/* Actions */}
+  {/* Actions */}
 <div className="flex items-center justify-end gap-1 w-[140px]">
   <ViewButton handleView={() => setViewTodo(todo)} />
   
-  {/* Only show Edit and Delete buttons for admin role */}
-  {currentUser?.role === "admin" && (
-    <>
-      <EditButton
-        handleUpdate={() => {
-          setSelectedTodo(todo);
-          setModalType("Edit");
-        }}
-      />
-      <DeleteButton
-        handleDelete={() => {
-          setCatchId(todo.id);
-          setModalType("Delete");
-        }}
-      />
-    </>
-  )}
+  {/* Permission-based Edit/Delete buttons */}
+  {(() => {
+    // Admin can edit/delete everything
+    if (currentUser?.role === 'admin') {
+      return (
+        <>
+          <EditButton
+            handleUpdate={() => {
+              setSelectedTodo(todo);
+              setModalType("Edit");
+            }}
+          />
+          <DeleteButton
+            handleDelete={() => {
+              setCatchId(todo.id);
+              setModalType("Delete");
+            }}
+          />
+        </>
+      );
+    }
+    
+    // Employee can only edit/delete their OWN created todos
+    // (todos where they are the creator AND it's employee-created)
+    if (
+      todo.created_by_role === 'employee' && 
+      todo.created_by === currentUser?.userId
+    ) {
+      return (
+        <>
+          <EditButton
+            handleUpdate={() => {
+              setSelectedTodo(todo);
+              setModalType("Edit");
+            }}
+          />
+          <DeleteButton
+            handleDelete={() => {
+              setCatchId(todo.id);
+              setModalType("Delete");
+            }}
+          />
+        </>
+      );
+    }
+    
+    // If no conditions met, show nothing (only View button)
+    return null;
+  })()}
 </div>
                   </div>
                 ))}

@@ -32,6 +32,8 @@ export type ALLPROGRESST = {
   projectName: string;
   date: string;
   note: string;
+  created_by: number;
+  created_by_role: 'admin' | 'employee';
 };
 
 interface ProgressProps {
@@ -49,13 +51,14 @@ export const Progress = ({
   const { loader } = useAppSelector((state) => state.NavigateState);
   const dispatch = useAppDispatch();
   const token = currentUser?.token;
+  const userId = currentUser?.userId; // 👈 Same as Todo
 
   const getStartOfMonth = () => {
-  const d = new Date();
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  return `${year}-${month}-01`;
-};
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    return `${year}-${month}-01`;
+  };
 
   const getCurrentDate = () => {
     const d = new Date();
@@ -110,7 +113,6 @@ export const Progress = ({
     setTimeout(() => dispatch(navigationSuccess("progress")), 500);
   }, [dispatch, handleGetAllProgress]);
 
-  // Sync with external triggers and reset page on search
   useEffect(() => {
     if (triggerModal > 0) setIsOpenModal("ADD");
   }, [triggerModal]);
@@ -119,17 +121,13 @@ export const Progress = ({
     setPageNo(1);
   }, [externalSearch, externalPageSize]);
 
-  // Logic for filtering and pagination
   const filteredProgress = useMemo(() => {
     return allProgress.filter((p) => {
-      // 1. Text Search Filter
       const matchesSearch =
         p.employeeName?.toLowerCase().includes(externalSearch.toLowerCase()) ||
         p.projectName?.toLowerCase().includes(externalSearch.toLowerCase()) ||
         p.note?.toLowerCase().includes(externalSearch.toLowerCase()) ||
         p.email?.toLowerCase().includes(externalSearch.toLowerCase());
-
-      // 2. Date Range Filter - FIXED LOGIC
 
       const progressDateStr = p.date?.split("T")[0];
 
@@ -178,7 +176,6 @@ export const Progress = ({
       setIsOpenModal("");
     } catch (error) {
       console.log(error);
-
       toast.error("Failed to delete progress");
     }
   };
@@ -217,17 +214,21 @@ export const Progress = ({
 
       <div className="overflow-auto px-3 sm:px-0">
         <div className="min-w-[900px]">
-          {/* HEADER SECTION - Matches UsersDetails */}
+          {/* HEADER SECTION */}
           <div className="px-0.5 pt-0.5">
             <div
-              className={`grid ${currentUser?.role === "admin" ? "grid-cols-[60px_1.5fr_1.5fr_1fr_1fr_auto]" : "grid-cols-[60px_1.5fr_1fr_auto]"} 
+              className={`grid ${
+                currentUser?.role === "admin" 
+                  ? "grid-cols-[60px_1.5fr_1.5fr_1.5fr_1.5fr_auto]"
+                  : "grid-cols-[60px_1.5fr_1.5fr_auto]"
+              } 
               bg-blue-400 text-white rounded-lg items-center font-bold text-xs tracking-wider sticky top-0 z-10 gap-3 px-3 py-3 shadow-sm`}
             >
               <span>Sr#</span>
               {currentUser?.role === "admin" && <span>Employee</span>}
               {currentUser?.role === "admin" && <span>Email</span>}
               <span>Project Name</span>
-              <span>Submission Date</span>
+              <span className="text-center">Submission Date</span>
               <span className="text-right pr-10">Actions</span>
             </div>
           </div>
@@ -237,9 +238,7 @@ export const Progress = ({
             {paginatedProgress.length === 0 ? (
               <div className="bg-gray-50 rounded-lg border p-12 flex flex-col items-center justify-center text-gray-400">
                 <RiInboxArchiveLine size={48} className="mb-3 text-gray-300" />
-                <p className="text-lg font-medium">
-                  No progress records found!
-                </p>
+                <p className="text-lg font-medium">No progress records found!</p>
               </div>
             ) : (
               <div className="flex flex-col gap-2">
@@ -248,8 +247,8 @@ export const Progress = ({
                     key={item.id}
                     className={`grid ${
                       currentUser?.role === "admin"
-                        ? "grid-cols-[60px_1.5fr_1.5fr_1fr_1fr_auto]"
-                        : "grid-cols-[60px_1.5fr_1fr_auto]"
+                        ? "grid-cols-[60px_1.5fr_1.5fr_1.5fr_1.5fr_auto]"
+                        : "grid-cols-[60px_1.5fr_1.5fr_auto]"
                     } 
                     items-center p-2 gap-3 text-sm bg-white border border-gray-100 rounded-lg hover:bg-blue-50/30
                      transition-colors shadow-sm`}
@@ -274,36 +273,68 @@ export const Progress = ({
                       <span className="truncate">{item.projectName}</span>
                     </div>
 
-                    <div className="flex items-center gap-2 text-gray-600">
+                    <div className="flex items-center justify-center text-gray-600">
                       <span>{formatDate(item.date)}</span>
                     </div>
 
-                 <div className="flex items-center justify-end gap-1 pr-2">
-  <ViewButton
-    handleView={() => {
-      setViewProgressData(item);
-      setIsViewModalOpen(true);
-    }}
-  />
-  
-  {/* Only show Edit and Delete buttons for admin role */}
-  {currentUser?.role === "admin" && (
-    <>
-      <EditButton
-        handleUpdate={() => {
-          setSelectedProgress(item);
-          setIsOpenModal("EDIT");
-        }}
-      />
-      <DeleteButton
-        handleDelete={() => {
-          setSelectedId(item.id);
-          setIsOpenModal("DELETE");
-        }}
-      />
-    </>
-  )}
-</div>
+                    {/* Actions - EXACTLY SAME LOGIC AS TODO */}
+                    <div className="flex items-center justify-end gap-1 w-[140px]">
+                      <ViewButton
+                        handleView={() => {
+                          setViewProgressData(item);
+                          setIsViewModalOpen(true);
+                        }}
+                      />
+                      
+                      {(() => {
+                        // Admin can edit/delete everything
+                        if (currentUser?.role === 'admin') {
+                          return (
+                            <>
+                              <EditButton
+                                handleUpdate={() => {
+                                  setSelectedProgress(item);
+                                  setIsOpenModal("EDIT");
+                                }}
+                              />
+                              <DeleteButton
+                                handleDelete={() => {
+                                  setSelectedId(item.id);
+                                  setIsOpenModal("DELETE");
+                                }}
+                              />
+                            </>
+                          );
+                        }
+                        
+                        // Employee can only edit/delete their OWN created progress
+                        // (progress where they are the creator AND it's employee-created)
+                        if (
+                          item.created_by_role === 'employee' && 
+                          item.created_by === currentUser?.userId
+                        ) {
+                          return (
+                            <>
+                              <EditButton
+                                handleUpdate={() => {
+                                  setSelectedProgress(item);
+                                  setIsOpenModal("EDIT");
+                                }}
+                              />
+                              <DeleteButton
+                                handleDelete={() => {
+                                  setSelectedId(item.id);
+                                  setIsOpenModal("DELETE");
+                                }}
+                              />
+                            </>
+                          );
+                        }
+                        
+                        // If no conditions met, show nothing (only View button)
+                        return null;
+                      })()}
+                    </div>
                   </div>
                 ))}
               </div>

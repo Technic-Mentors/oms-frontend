@@ -25,6 +25,8 @@ export type TodoType = {
   todoStatus: "Y" | "N";
   note: string;
   deadline: string;
+  created_by: number;        // Add this
+  created_by_role: 'admin' | 'employee';  // Add this
 };
 
 type UserT = {

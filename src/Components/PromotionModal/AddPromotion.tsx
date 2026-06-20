@@ -12,9 +12,6 @@ import { CancelBtn } from "../CustomButtons/CancelBtn";
 import { BASE_URL } from "../../Content/URL";
 import { useAppSelector } from "../../redux/Hooks";
 
-const today = new Date();
-const currentDate = today.toLocaleDateString("sv-SE");
-
 type AddPromotionProps = {
   setModal: () => void;
   handleRefresh: () => void;
@@ -25,7 +22,7 @@ type AddPromotionType = {
   current_designation: string;
   requested_designation: string;
   note: string;
-  date: string;
+  // date: string; // Removed - will be set automatically
 };
 
 type User = {
@@ -49,7 +46,7 @@ const initialState: AddPromotionType = {
   current_designation: "",
   requested_designation: "",
   note: "",
-  date: currentDate,
+  // date removed
 };
 
 export const AddPromotion = ({
@@ -92,7 +89,6 @@ export const AddPromotion = ({
     }
   }, [token]);
 
-  // Add this function to fetch current user's lifeline
   const getMyLifeLine = useCallback(async () => {
     if (!token || isAdmin) return;
     try {
@@ -101,7 +97,6 @@ export const AddPromotion = ({
       });
       const myLifeLineData = Array.isArray(res.data) ? res.data : [];
       
-      // Get the latest lifeline entry for current user
       const latestLifeLine = myLifeLineData
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
       
@@ -119,7 +114,6 @@ export const AddPromotion = ({
       }
     } catch (error) {
       console.error("Failed to fetch my lifeline:", error);
-      // Even if lifeline fetch fails, set the ID
       setAddPromotion((prev) => ({
         ...prev,
         id: String(currentUser?.id),
@@ -132,7 +126,6 @@ export const AddPromotion = ({
       getAllUsers();
       getEmployeeLifeLine();
     } else {
-      // For non-admin users, fetch their lifeline data
       getMyLifeLine();
     }
   }, [isAdmin, getAllUsers, getEmployeeLifeLine, getMyLifeLine, currentUser]);
@@ -177,15 +170,15 @@ export const AddPromotion = ({
   const handlerSubmitted = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const { id, current_designation, requested_designation, note, date } =
+    // Removed date from validation
+    const { id, current_designation, requested_designation, note } =
       addPromotion;
 
     if (
       !id ||
       !current_designation ||
       !requested_designation ||
-      !note ||
-      !date
+      !note
     ) {
       return toast.error("Please fill all required fields", {
         toastId: "add-promotion-validation",
@@ -235,7 +228,7 @@ export const AddPromotion = ({
 
   return (
     <div
-      className="fixed inset-0 bg-black/30 backdrop-blur px-4  flex items-center justify-center z-50"
+      className="fixed inset-0 bg-black/30 backdrop-blur px-4 flex items-center justify-center z-50"
       onKeyDown={(e) => {
         if (e.key === "Enter") e.preventDefault();
       }}
@@ -270,7 +263,7 @@ export const AddPromotion = ({
               value={addPromotion.current_designation}
               readOnly
               minLength={3}
-                maxLength={50}
+              maxLength={50}
             />
 
             <InputField
@@ -280,18 +273,10 @@ export const AddPromotion = ({
               handlerChange={handlerChange}
               value={addPromotion.requested_designation}
               minLength={3}
-                maxLength={50}
+              maxLength={50}
             />
 
-            <div className="md:col-span-2">
-              <InputField
-                labelName="Date *"
-                type="date"
-                name="date"
-                handlerChange={handlerChange}
-                value={addPromotion.date}
-              />
-            </div>
+            {/* Date field removed - will be set automatically */}
 
             <div className="md:col-span-2">
               <TextareaField
@@ -299,7 +284,7 @@ export const AddPromotion = ({
                 handlerChange={handlerChange}
                 name="note"
                 inputVal={addPromotion.note}
-                 minLength={3} // Add this
+                minLength={3}
                 maxLength={250}
               />
             </div>

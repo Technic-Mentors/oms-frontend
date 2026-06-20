@@ -39,6 +39,9 @@ const currentDate = (() => {
   ).padStart(2, "0")}`;
 })();
 
+// Get max date (today) for disabling future dates
+const maxDate = currentDate;
+
 type AddProgressType = {
   employee_id: string;
   email?: string;
@@ -283,6 +286,8 @@ export const AddProgress = ({ setModal, handleRefresh }: AddProgressProps) => {
               type="date"
               handlerChange={handlerChange}
               value={addProgress.date}
+              max={maxDate}
+              className="future-date-disabled"
             />
 
             <div className="md:col-span-2">
@@ -291,7 +296,7 @@ export const AddProgress = ({ setModal, handleRefresh }: AddProgressProps) => {
                 name="note"
                 handlerChange={handlerChange}
                 inputVal={addProgress.note}
-                minLength={3} // Add this
+                minLength={3}
                 maxLength={250}
               />
             </div>
